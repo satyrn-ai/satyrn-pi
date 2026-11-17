@@ -4,9 +4,9 @@ Scope: [BRIEF](BRIEF.md). Process: [Superpowers/SDD and roadmap rules](docs/rule
 
 ## Now
 
-In flight: the staged design handoff; no product phase has shipped.
+In flight: [P1.2](#phase-1--repository-and-dependencies), the vocabulary agreement and its gate plan, after P1.1 landed.
 Parked: preset choices and rented-host qualification await their [research owners](BRIEF.md#decisions-the-research-documents-own).
-Next: [P1.1](#phase-1--repository-and-dependencies), populating the repository from this tree.
+Next: [P2.1](#phase-2--sdd-setup), after P1.2 closes.
 
 Rows are initial proposals. Brainstorm each phase during the port and split or
 add cycles before implementation; one row does not limit a phase to one cycle.
@@ -20,7 +20,7 @@ presets select remedies.
 
 | Cycle | Ships | Excludes | Status |
 | --- | --- | --- | --- |
-| **P1.1** | Infrastructure: `github.com/satyrn-ai/satyrn-pi` seeded from this tree, npm and Python package layout and dependency locks, default test commands, ignored runs, and a repository-weight check. Record the Pi version the port targets, declare it as the package's peer range, and claim both registry names: a PyPI pending trusted publisher for `satyrn-pi`, and an npm name checked and, if it must be held, published as an agreed placeholder. Both package names are `satyrn-pi`. Include Zensical and `zensical-glossary` in the docs development dependencies; theme and extension setup land in P3.1. | Publishing empty packages; worker behaviour; eval execution; OpenCode. | proposed — first implementation cycle; P1.2 confirms package responsibilities. |
+| **P1.1** | Infrastructure: `github.com/satyrn-ai/satyrn-pi` seeded from this tree, npm and Python package layout and dependency locks, default test commands, ignored runs, and a repository-weight check. Record the Pi version the port targets, declare it as the package's peer range, and claim both registry names: a PyPI pending trusted publisher for `satyrn-pi`, and an npm name checked and, if it must be held, published as an agreed placeholder. Both package names are `satyrn-pi`. Include Zensical and `zensical-glossary` in the docs development dependencies; theme and extension setup land in P3.1. | Publishing empty packages; worker behaviour; eval execution; OpenCode. | closed 2026-11-17 — seed copied byte-for-byte from staging `44bdbd61` (staging README excluded) in PR #1. npm and Python `satyrn-pi` 0.1.0 skeletons with locks; default suites `npm test` and `uv run pytest` (no model, network or subprocess); `runs/` ignored; weight check passes at 27 files. Pi peer range `^1.1.0`, targeting 1.5.2; npm name checked unclaimed, PyPI publisher postponed to the first release cycle. [Plan](docs/superpowers/plans/archive/2026-11-17-p1.1-repository-setup.md). |
 | **P1.2** | Documentation: worker/eval responsibilities, import direction and shared run meaning in `docs/domain.md`; canonical terms in `docs/glossary.md`, with a numeric jargon budget and checker scope for phase 2. Apply the [vocabulary decisions](docs/superpowers/research/2026-11-16-vocabulary-review.md#port-acceptance); review Vanilla on the Easy suite and Base with an empty preset to expose ambiguity. | Runtime code; a generic domain framework; detailed CLI/schema design; new names for concepts ordinary language already explains. | proposed — after P1.1 and before P2.1; Nicola reviews with implementers and Ben. Later cycles record justified refinements. [Plan](docs/superpowers/plans/2026-11-16-vocabulary.md) carries the budget, the rejected alternatives and the retired-term check. |
 
 ## Phase 2 — SDD setup
