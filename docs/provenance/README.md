@@ -31,6 +31,15 @@ evidence for the port. They are not the rules of this repository.
   revision or a port decision makes part of them stale. A dated correction
   belongs in the document that supersedes them, not here.
 
+## Related, but not preserved
+
+[`../rules-applicability.md`](../rules-applicability.md) is the port's own
+**transition record**: authored for this repository, dated, and expected to be
+superseded when P2.1 installs the effective rules into the root `AGENTS.md`. It
+is not a verbatim copy and does not live here for that reason; it carries the
+precedence table and the source→port mappings that give the files above their
+effective meaning.
+
 ## Verify a copy
 
 From a checkout of this repository, with the source repository available:
