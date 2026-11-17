@@ -1,0 +1,21 @@
+# Run records and workspaces are never committed (BRIEF: repository-weight
+# budget). Raw traces and stdout are release assets.
+runs/
+
+# Node
+node_modules/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Build output
+dist/
+
+# IDE
+.idea/
