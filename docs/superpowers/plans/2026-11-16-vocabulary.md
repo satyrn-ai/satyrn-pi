@@ -23,7 +23,14 @@ work, including the gate, so neither is re-derived later.
 | `screen`, `arm`, `redispatch` | Retained; plain explanation at first use | They carry distinctions the standard words lose |
 | `ladder`, `rung` | Source-mapping only; never taught as product choices | Names an axis the source does not have: the model is fixed, the task varies |
 | `recorder` | Retained; conversation/action history is the trajectory | The component has no standard name; the data it writes does |
-| Dataset, task, trial, job, verifier, agent | Proposed for P1.2, per Harbor | Industry vocabulary already in use for this exact domain |
+| Agent | Added as the genus for Vanilla, Base, Easy, Medium and Hard | Five agent entries named no kind; Agent replaces the retired Stage concept |
+| Task | Retained from Harbor | One unit of work with its fixture, prompt and grading expectations |
+| Job | Retained from Harbor | One complete eval CLI invocation, aggregating its trials |
+| Trial | Retained from Harbor | One agent attempt at one task; repetitions remain distinct trials |
+| Trajectory | Retained as the recorder's session artifact | It names the evidence, not another orchestration layer |
+| Dataset → Eval suite | Map to the port's existing term | The port already uses Eval suite for the same task collection |
+| Verifier → Grader | Map to the port's existing term | The port already names the component and its package-owned tests |
+| Run, Pi session | Ordinary architecture terms, not glossary entries | Run means executing a job; Pi session names the child-process boundary |
 
 Ladder and rung are not standard evaluation vocabulary. In ML a *scaling ladder*
 means a series of model sizes, and on a leaderboard it means a ranking; here the
@@ -49,7 +56,46 @@ Counts over the port's own documents on 2026-11-16, excluding the verbatim
 | `screen` / `redispatch` | 23 / 6 | 7 / 2, all explanatory |
 
 The remaining occurrences are in research notes quoting the source, where the
-review keeps the original wording with a dated mapping beside it.
+review keeps the original wording with a dated mapping beside it. This table is
+a historical count from 2026-11-16; the desk walk below records the terms added
+on 2026-11-17.
+
+## Desk walk, 2026-11-17
+
+Run Vanilla on the Easy [Eval suite](../glossary.md#eval-suite) and Base with an
+empty preset on the same suite. Both use the same eval machinery to record
+evidence for quality and budget.
+
+- **Vanilla** sets the lowest-level baseline: ordinary Pi with the subject
+  model, the trace recorder and no worker or remedies. It shows what a regular
+  non-Satyrn user gets from a small model. It is expected to fail.
+- **Base** provides the minimum research environment: the thin worker plus the
+  remedies explicitly listed in `base.json`, initially none. It exists so
+  individual pathologies and remedies can be investigated.
+
+Empty Base and Vanilla can behave alike today. That observable similarity does
+not make the agents interchangeable: Vanilla has no worker or remedies, while
+Base has the worker and an explicit preset that later evidence can extend.
+Equal scores are therefore not evidence that the two roles are the same.
+
+The walk exposed these vocabulary questions and resolved them as follows.
+
+| Ambiguity | Resolution | Budget effect |
+| --- | --- | --- |
+| Vanilla and Base named no kind | Added Agent as their genus | Agent replaces Stage; net zero for that concept |
+| Agent, preset and arm were easy to conflate | Agent includes worker state; a preset is only its ordered remedy list; an arm is research vocabulary for a comparison with run settings | No new term; existing definitions clarify the boundary |
+| Task, job, trial and trajectory had no entries | Retained the useful Harbor boundaries | Four additions |
+| Dataset duplicated Eval suite | Keep Eval suite | No addition |
+| Verifier duplicated Grader | Keep Grader | No addition |
+| Run, request and Pi session were easy to conflate | Run executes a job; a session is a child-process boundary; a trial records the requests | No glossary additions; explained in `docs/domain.md` |
+| Redispatch looked like several trials | Redispatch retains one session ID and remains one trial | No addition; recorded as a run boundary |
+| A killed job could leave misleading evidence | `trial.json` is created before spawn and atomically replaced at each boundary; partial status never implies completion or a score | No addition; recorded as a run boundary |
+
+The glossary inventory after the walk is ten entries: Agent, Vanilla, Base,
+Remedy, Preset, Eval suite, Task, Job, Trial and Trajectory. The numeric budget
+is not decided here. Its number and scope remain for agreement with Nicola, Ben
+and the implementers in task 2; the walk records the cost of each addition so
+that conversation can price the inventory rather than rediscover it.
 
 ## Rejected alternatives
 
@@ -119,9 +165,11 @@ retired term in a page are different review conversations.
 ## Tasks
 
 1. P1.2: write `docs/domain.md` (worker and eval responsibilities, import
-   direction, shared run meaning) and the five glossary entries plus any retained
-   research terms. Walk Vanilla-on-Easy and Base-with-an-empty-preset, and record
-   every ambiguity the walk exposes as a glossary change or a budget argument.
+   direction, shared run meaning) and the ten glossary entries (Agent, Vanilla,
+   Base, Remedy, Preset, Eval suite, Task, Job, Trial and Trajectory) plus any
+   retained research terms. Walk Vanilla-on-Easy and Base-with-an-empty-preset,
+   and record every ambiguity the walk exposes as a glossary change or a budget
+   argument.
 2. P1.2: agree the numeric budget with Nicola, Ben and the implementers, and
    record the number and its scope in `docs/glossary.md`. Confirm or refuse the
    Harbor mapping in the same record, term by term.
