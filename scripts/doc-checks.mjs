@@ -117,6 +117,58 @@ export function checkCaps(doc, budget = BUDGET) {
   }
 }
 
+const PLAN_KEYS = ["phase", "feature_cycle", "cycle", "lifecycle"];
+const LIFECYCLES = new Set(["active", "closed", "superseded"]);
+
+export function parseFrontMatter(text) {
+  const match = text.match(/^---\n([\s\S]*?)\n---\n/);
+  if (!match) return null;
+  const fields = {};
+  for (const line of match[1].split("\n")) {
+    const field = line.match(/^([A-Za-z_]+):\s*(.+?)\s*$/);
+    if (field) fields[field[1]] = field[2];
+  }
+  return fields;
+}
+
+export function checkLifecycle(doc) {
+  const findings = [];
+  const fields = parseFrontMatter(doc.text);
+  if (!fields) {
+    return [finding(doc, "plan-front-matter", "plan has no front matter")];
+  }
+  const missing = PLAN_KEYS.filter((key) => !fields[key]);
+  if (missing.length > 0) {
+    findings.push(
+      finding(doc, "plan-front-matter", `front matter missing ${missing.join(", ")}`),
+    );
+  }
+  const state = fields.lifecycle;
+  if (state && !LIFECYCLES.has(state)) {
+    findings.push(finding(doc, "plan-lifecycle", `unknown lifecycle "${state}"`));
+  }
+  const headings = [...doc.text.matchAll(/^## (.+)$/gm)].map((m) => m[1].trim());
+  if (doc.archived) {
+    if (state && state !== "closed" && state !== "superseded") {
+      findings.push(finding(doc, "plan-lifecycle", `archived plan has lifecycle "${state}"`));
+    }
+    const terminal = headings.at(-1) === "Result";
+    if (!terminal && !LEGACY_ARCHIVED_WITHOUT_RESULT.includes(doc.path)) {
+      findings.push(
+        finding(doc, "plan-archive-result", "archived plan has no terminal ## Result"),
+      );
+    }
+  } else {
+    if (state && state !== "active") {
+      findings.push(finding(doc, "plan-lifecycle", `active plan has lifecycle "${state}"`));
+    }
+    if (headings.includes("Result")) {
+      findings.push(finding(doc, "plan-active-result", "active plan has a ## Result"));
+    }
+  }
+  return findings;
+}
+
 async function readMarkdown(dir, root) {
   const full = path.join(root, dir);
   if (!existsSync(full)) return [];
