@@ -66,4 +66,6 @@ they do not enter the product glossary.
 - [README.md](README.md) — contributor setup and default checks.
 - [docs/domain.md](docs/domain.md) — components, responsibilities and run boundaries.
 - [docs/superpowers/setup.md](docs/superpowers/setup.md) — Superpowers revision and setup record.
+- [BACKLOG.md](BACKLOG.md) — deferred work and its reopen conditions.
+- [docs/pathologies.md](docs/pathologies.md) — observed failure shapes and their evidence.
 - [docs/superpowers/plans/](docs/superpowers/plans/) — active and archived plans.
