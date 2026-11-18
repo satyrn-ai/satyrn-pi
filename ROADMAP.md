@@ -4,9 +4,9 @@ Scope: [BRIEF](BRIEF.md). Process: [Superpowers/SDD and roadmap rules](docs/rule
 
 ## Now
 
-In flight: [P1.2](#phase-1--repository-and-dependencies), the vocabulary agreement and its gate plan, after P1.1 landed.
+In flight: [P2.1](#phase-2--sdd-setup), contributor setup, stacked on [P1.2](#phase-1--repository-and-dependencies) while that documentation cycle is in review.
 Parked: preset choices and rented-host qualification await their [research owners](BRIEF.md#decisions-the-research-documents-own).
-Next: [P2.1](#phase-2--sdd-setup), after P1.2 closes.
+Next: [P2.2](#phase-2--sdd-setup), the rules index and mapped records, after P2.1.
 
 Rows are initial proposals. Brainstorm each phase during the port and split or
 add cycles before implementation; one row does not limit a phase to one cycle.
@@ -27,7 +27,12 @@ presets select remedies.
 
 | Cycle | Ships | Excludes | Status |
 | --- | --- | --- | --- |
-| **P2.1** | Infrastructure: a recorded Superpowers revision and contributor Pi skill setup; root rules index, verbatim source rules, glossary and observed-failure records, backlog and close checklist; re-earned cap/lifecycle/evidence checks, P1.2's numeric jargon budget and retired-term check (exemptions declared at the point of use), default-test tripwire and one-way import check. Demonstrate a new contributor's agent finding the rules and following a cycle. See [applicability](docs/rules-applicability.md). | Education material; transplanting source tests; loading contributor skills into the subject worker; runtime measurement claims; tests requiring obsolete glossary headings. | proposed — after P1.2; use Superpowers/SDD from the first cycle, then prove this repeatable setup and its gates. |
+| **P2.1** | Infrastructure: contributor `README.md`; `npm run setup` running locked `npm ci`/`uv sync` and installing Superpowers as a ref-pinned Pi git package (`bb92a77`, `v6.1.1-56-gbb92a77`), refusing a different existing ref without `--yes`; the revision and setup record with its upgrade policy; a fresh-clone proof. The rows below record the split of the original phase 2 scope. | Runtime code; root `AGENTS.md`; wrapper skill; executable gates; loading skills into the subject worker. | in flight 2026-11-18 — stacked on P1.2 (`015c93d`) in review. [Spec](docs/superpowers/specs/2026-11-18-p2.1-contributor-setup-design.md), [plan](docs/superpowers/plans/2026-11-18-p2.1-contributor-setup.md). |
+| **P2.2** | Infrastructure: root `AGENTS.md` as the index to the effective rules; a thin local wrapper skill pointing at repository policy without duplicating Superpowers; `BACKLOG.md`; `docs/pathologies.md`; every destination the close checklist links; byte-verification of the preserved `docs/sdd.md` and `docs/provenance/mellum-worker-AGENTS.md` against source `0e4a9b68`. | Education material; copying Superpowers into the repository; transplanting source tests; executable gates (P2.3–P2.5). | proposed — after P2.1. |
+| **P2.3** | Infrastructure: re-earned cap, plan-lifecycle and evidence-wording checks, each shown to fail first, wired into the default Node suite. | Runtime measurement claims; tests requiring obsolete glossary headings; the vocabulary gates (P2.4). | proposed — after P2.2, when `BACKLOG.md` and plan records exist. |
+| **P2.4** | Infrastructure: P1.2's numeric jargon budget and retired-term check, with point-of-use exemptions and a planted violation that fails before it is reverted. | A blanket ban on ordinary English; editing documents from the check; hand-maintained exemption lists. | proposed — after P2.3; consumes the P1.2 glossary, domain map and plan. |
+| **P2.5** | Infrastructure: the default-test tripwire and the one-way import check, each shown to fail first. | Runtime code; model, network or subprocess in the default suites. | proposed — after P2.4. |
+| **P2.6** | A new contributor's agent finds the rules and follows a cycle, using this phase's own artifacts; phase close resolves every active path and runs both default suites. | Inventing a product feature to prove process; an unreviewed negative outcome; runtime setup claims. | proposed — after P2.5. |
 
 ## Phase 3 — Zensical documentation
 
