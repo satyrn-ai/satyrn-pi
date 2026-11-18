@@ -2,9 +2,10 @@
 // subprocesses are fakes and settings live in temporary directories.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   SUPERPOWERS,
   decideAction,
@@ -186,4 +187,26 @@ test("runSetup refuses to rewrite an unpinned entry without --yes", async (t) =>
     /--yes/,
   );
   assert.ok(!calls.some((call) => call.startsWith("pi install")));
+});
+
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+test("README and revision record match the script pin", async () => {
+  const readme = await readFile(path.join(repoRoot, "README.md"), "utf8");
+  const record = await readFile(
+    path.join(repoRoot, "docs/superpowers/setup.md"),
+    "utf8",
+  );
+  const pkg = JSON.parse(await readFile(path.join(repoRoot, "package.json"), "utf8"));
+
+  for (const document of [readme, record]) {
+    assert.ok(
+      document.includes(SUPERPOWERS.commit),
+      "each document must carry the pinned commit",
+    );
+  }
+  for (const text of ["npm run setup", "npm test", "uv run pytest", "--yes"]) {
+    assert.ok(readme.includes(text), `README must document ${text}`);
+  }
+  assert.equal(pkg.scripts.setup, "node scripts/setup.mjs");
 });
