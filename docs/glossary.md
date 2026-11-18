@@ -47,7 +47,7 @@ One complete eval CLI invocation. It resolves the worker, Pi, suite and server b
 
 ### Trial
 
-One agent attempt at one task within a job. It covers that attempt's Pi session, including a child-process chain that keeps one session ID, and ends before grading.
+One agent attempt at one task within a job, covering its Pi session and subsequent grading. Its session may include a child-process chain that keeps one session ID; its record ends in a verdict or remains explicitly incomplete.
 
 ### Trajectory
 

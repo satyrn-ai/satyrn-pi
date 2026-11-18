@@ -5,10 +5,54 @@ Use it to decide where a change belongs and which implementation to inspect.
 It describes architecture and run behavior; the glossary defines the terms used here.
 Start with the two packages, then follow a run and its data across their boundary.
 
-This is the target architecture. P1.1 provides package skeletons only: the npm
-package has no worker or remedies yet, and `src/satyrn_pi/` contains only the
-package version. Sections below distinguish current locations from components
-planned by later cycles.
+## Current and planned implementation
+
+**Current implementation:** P1.1 provides package skeletons only. The npm package
+has no worker or remedies yet, and `src/satyrn_pi/` contains only the package
+version. Eval execution, suites and grading are not available yet.
+
+**Port decision:** the concept relationships, ownership rules and boundaries below
+are the target architecture. Paths marked planned become real in their owning
+roadmap cycles.
+
+**Source evidence:** the remedy-hook table reports behavior observed in the pinned
+source. It informs the port but does not claim that those hooks are implemented.
+
+## Core architecture
+
+An [agent](glossary.md#agent) is a composition, not a model. The worker is an
+optional component of that composition; the model and host remain inputs outside
+it.
+
+```text
+Agent = Pi + optional worker + recorder + selected remedies
+Model and host = external inputs
+
+Preset selects remedies
+Eval suite selects tasks and grading expectations
+Neither selection implies the other
+```
+
+The worker supplies model switching and span reporting. The recorder observes the
+session. Remedies supply explicit behavior at Pi seams. A [preset](glossary.md#preset)
+names the resolved remedy selection; an [Eval suite](glossary.md#eval-suite) names
+the work and grading expectations. Every run records both choices independently.
+
+Evaluation has three nested boundaries:
+
+```text
+Job: one eval CLI invocation
+ └─ Trial: one agent attempt at one task
+     ├─ Workspace: prepared before execution
+     ├─ Pi session: child-process chain → Trajectory
+     └─ Grader: runs after the session → Verdict
+```
+
+A [job](glossary.md#job) aggregates trials. A [trial](glossary.md#trial) joins one
+agent to one [task](glossary.md#task), covers its Pi session and subsequent grading,
+and ends with a verdict or an explicit incomplete state. The Pi session ends when
+its last child exits; grading then becomes part of the trial's evidence. The
+[trajectory](glossary.md#trajectory) records execution, not the grading result.
 
 ## The two packages
 
@@ -21,62 +65,82 @@ Both published artefacts are named `satyrn-pi`, but they have different jobs.
 
 ### The Pi package
 
-The npm package supplies the task-completing [agent](glossary.md#agent) inside
-Pi. Its worker is deliberately thin: it switches to the subject model, drops
+The worker is deliberately thin: it switches to the subject model, drops
 pre-marker history, tracks and records the worker span, writes its report, and
 restores the main model. The command and mode machinery exist only to support
 that transition.
 
 The worker bundles nothing else. It installs no prompt replacement, tool
-restriction, project facts or guards. Everything of that kind is an explicit
-[remedy](glossary.md#remedy), implemented in one inspectable TypeScript file
-under the planned `remedies/<kind>/` tree. A [preset](glossary.md#preset) stores
-an ordered remedy list, initially empty, and adds no hidden defaults.
+restriction, project facts or guards. Those behaviors belong to explicit
+[remedies](glossary.md#remedy), each implemented in one inspectable TypeScript
+file under the planned `remedies/<kind>/` tree.
 
-[Vanilla](glossary.md#vanilla) is also an agent in the npm package, but it loads
-Pi with the trace recorder and no worker extension or remedies. It is the
-ordinary-Pi baseline with a small model; it is expected to fail. [Base](glossary.md#base)
-is the thin worker in active mode plus the remedies explicitly named in
-`base.json`. Base exists to make individual pathologies and remedies
-investigable, not to disguise the baseline's failures.
+The npm loader resolves `base.json` at session start. Eval reads the same
+selection at run start and records the resolved list, order and each file's
+SHA-256. The worker adds nothing behind that list; adjacent presets may be equal
+without becoming the same architectural role.
 
 ### The Python package
 
-The Python package supplies measurement. Its CLI resolves and runs an eval
-[job](glossary.md#job), prepares each workspace, starts Pi sessions, invokes the
-grader, and writes records. An [Eval suite](glossary.md#eval-suite) selects
-[tasks](glossary.md#task) and their grading expectations; presets select
-remedies. Neither choice implies the
-other, so every run names both.
+The Python package supplies measurement. Its CLI resolves and runs a job,
+prepares each workspace, starts Pi sessions, invokes the grader, and writes
+records. Suites and graders are package data rather than a checkout-local
+ladder.
 
-The planned runtime lives under `src/satyrn_pi/`; suites and graders are package
-data rather than a checkout-local ladder. The CLI never imports the worker's
-TypeScript or reaches into its extension state. It invokes a resolved worker and
-observes the files and process results that cross the package boundary.
+The planned runtime lives under `src/satyrn_pi/`. The CLI never imports the
+worker's TypeScript or reaches into its extension state. It invokes a resolved
+worker and observes the files and process results that cross the package
+boundary.
+
+## Where a change belongs
+
+| Changing… | Owner and location | Status |
+| --- | --- | --- |
+| Model switching, worker span or report | npm worker extension | Planned; Base lands in P8.1 |
+| A pathology-specific behavior | `remedies/<kind>/<name>.ts` in the npm package | Planned; remedy cycles begin in P10.1 |
+| Remedy selection or order | Preset JSON in the npm package | Planned with Base and later presets |
+| Recorder output | Recorder extension in the npm package | Planned with Vanilla in P7.1 |
+| CLI resolution or process orchestration | `src/satyrn_pi/` | Package root current; runtime planned in P5.1 |
+| Tasks, fixtures or variants | Python suite package data | Planned in P6.1 |
+| Grading expectations or checks | Python grader package data | Planned in P6.1 |
+| Process deadlines or redispatch | Python eval orchestration | Planned in P5.1 and later acceptance work |
+| Record contents and provenance | Python run-record implementation; output under ignored `runs/` | `runs/` ignore current; records planned from P5.1 |
+| Vocabulary or architectural ownership | `docs/glossary.md` or `docs/domain.md` | Current P1.2 documentation |
 
 ## Import direction and the boundary
 
 The worker never imports the eval package. The eval package never imports worker
-internals. It resolves a worker executable by explicit path or installed npm
-package, records that resolution, and starts Pi as a child process. P2.1's
+internals. No package imports or in-process calls cross the boundary. P2.1's
 one-way import check enforces this direction.
 
-Only data crosses the boundary:
+Process orchestration still crosses it explicitly:
 
-- **Out of Pi:** the [trajectory](glossary.md#trajectory), the worker's report,
-  the finished workspace, process status and usage evidence.
-- **Into the completed trial:** the eval package's own grader copy after the
-  session has ended. The grader runs from a sandboxed copy outside the
-  workspace, so the agent can neither read nor edit what grades it.
+- **Into Pi:** a resolved worker path, selected extension and preset paths,
+  configuration, prompt, workspace, arguments and environment.
+- **Out of Pi:** the trajectory, the worker's report, the finished workspace,
+  process status and usage evidence.
+- **Into the trial after its session:** the eval package's own grader copy. The
+  grader runs from a sandboxed copy outside the workspace, so the agent can
+  neither read nor edit what grades it.
 
-No remedy, grader, suite answer or executable code crosses in either direction.
 A worker path and version identify the code that ran; records, not imports,
-connect it to the measurement.
+connect it to the measurement. Grader code is copied only after the session and
+is never loaded by the worker. No suite answer crosses into the agent.
 
 ## A run
 
-A run is the ordinary word for executing a [job](glossary.md#job). Its boundary
-is the CLI invocation, not an individual model request or Pi session.
+The eval CLI executes a job; run remains ordinary language for that execution.
+Its boundary is the CLI invocation, not an individual model request or Pi
+session.
+
+### Run and evidence architecture
+
+| Stage | Owner | Produces |
+| --- | --- | --- |
+| Resolve and prepare | Python CLI | Job configuration, workspace and prompt |
+| Execute | Pi, worker, recorder and remedies | Trajectory, worker report and finished workspace |
+| Grade | Python grader | Trust markers and verdict |
+| Summarize | Python CLI | Job summary and CI status |
 
 ### 1. Resolve before anything starts
 
@@ -94,11 +158,10 @@ version, CLI version, repetition count and any preregistered decision rule.
 
 ### 2. Prepare a trial before its session exists
 
-A [trial](glossary.md#trial) is one agent attempt at one task. The CLI first
-materialises the workspace by copying the fixture's base and the selected
-variant's overlay, including deletions and prompt files. It records the prompt
-and the pinned model here. At this point nothing is running: the workspace is
-only a directory on disk.
+The CLI prepares the trial's workspace by copying the fixture's base and the
+selected variant's overlay, including deletions and prompt files. It records the
+prompt and the pinned model here. At this point nothing is running: the
+workspace is only a directory on disk.
 
 ### 3. Bound the Pi session by processes
 
@@ -132,7 +195,8 @@ Grading happens after the Pi session, outside it and outside the workspace. With
 the child processes gone, the eval package copies its own grader tests in and
 runs them. The worker cannot substitute a test or alter the grader copy. The
 grading stage records `leaked.json`, `layout.json`, the contamination marker,
-`acceptance.json` and `stalled.json` before it produces a verdict.
+`acceptance.json` and `stalled.json` before it produces a verdict. The trial
+includes this grading stage even though its Pi session has already ended.
 
 ### 5. Keep the evidence
 
@@ -149,12 +213,19 @@ runs/<date>-<suite>/<job>/
   run.json          job summary, written last
 ```
 
-`trial.json` names at least the worker path and version, Pi version, suite and
-grader version, host card, score when grading completed, and number of model
-requests. It
-also names the agent, the resolved preset with per-file SHA-256 hashes, the
-prompt, session identity, exit status, deadline and stall markers. `run.json`
-summarises the job, and the CLI exit status carries the verdict for CI.
+**Configuration evidence** names the agent, resolved preset with per-file
+SHA-256 hashes, worker path and version, Pi version, suite and grader version,
+model, host card and prompt. It identifies what was asked to run before terminal
+output can be trusted.
+
+**Execution evidence** contains the trajectory, finished workspace, process
+status, deadline and stall markers, and number of model requests. It shows what
+ran and how far it progressed.
+
+**Result evidence** contains `verdict.json`, per-check results, grader version,
+trust markers and score when grading completed. `run.json` summarises the job,
+and the CLI exit status carries the verdict for CI. A killed job can leave no
+summary; its partial records remain inspectable.
 
 `trial.json` is created before the Pi process starts and atomically replaced at
 each boundary: prepared, running, session ended, graded. If the whole CLI is
@@ -169,6 +240,20 @@ complete. If only the child is stopped, the CLI records that outcome explicitly.
 | CLI to workspace | Python | Fixture files, variant overlay and prompt text. |
 | Session start and end | Pi child process | Arguments, environment, session ID and working directory in; trajectory and finished workspace out. |
 | Session to grader | Python | A finished workspace; nothing live from the session. |
+
+## Vanilla and Base in the architecture
+
+The desk walk runs [Vanilla](glossary.md#vanilla) and [Base](glossary.md#base) on
+the same Easy suite. Vanilla follows the worker-free agent composition. Base
+follows the active-worker composition and resolves the empty `base.json`
+selection. The suite, grader, model and host can stay fixed while those agent
+architectures differ.
+
+Vanilla exposes the small model's expected failures. Base supplies the minimum
+research environment in which individual pathologies and remedies become
+investigable. Empty Base and Vanilla can therefore behave alike without becoming
+interchangeable; equal scores do not erase the worker, preset and research-role
+differences. Both use the eval machinery to record quality and budget evidence.
 
 ## Remedy seams
 
@@ -186,9 +271,34 @@ than one hook, and a preset selects individual remedies, not whole kinds.
 | check | `agent_before_settle` | Run an explicit quality or evidence check before the agent may finish. |
 | workflow | Registered workflow tools and `tool_call` | Sequence a plan, gates and checkpoints across a larger task. |
 
-These are architecture seams, not definitions. The glossary defines remedy,
-preset and agent; contributors place each implementation under the matching
-`remedies/<kind>/` path and record its evidence.
+These are architecture seams, not definitions. Contributors place each
+implementation under the matching `remedies/<kind>/` path and record its evidence.
+The exact port hooks are verified against the targeted Pi version in their owning
+implementation cycles; this table does not turn source evidence into current code.
+
+## Driving the system
+
+Humans and agents start with the same discovery route: identify the concept here,
+use the change-location table, then open the owning operational guide. Planned
+destinations are named without links until those documents exist.
+
+| Intent | Canonical destination | Availability |
+| --- | --- | --- |
+| Understand concepts and ownership | `docs/domain.md` | Current in P1.2 |
+| Contribute through repository workflows | Root `AGENTS.md` and contributor guidance | Planned in P2.1 |
+| Run an eval | Eval CLI guide | Planned in P5.1 |
+| Write a suite, task or grader | Eval authoring guide | Planned in P6.1 |
+| Interpret scores and evidence | Scoring and evidence guide | Planned in P6.1 |
+
+The P2.1 contributor setup links this domain document from `AGENTS.md`, making it
+reachable from an agent's normal entry point. The P5.1 operational guide owns
+copyable commands, prerequisites, outputs and failure behavior. The P6.1 guides
+own suite and grader authoring contracts and score interpretation.
+
+Until those cycles land, the eval runtime and authoring interfaces are planned,
+not executable. After a run becomes available, verification uses configuration evidence, execution evidence and result evidence
+rather than terminal output alone. This routing section discovers capabilities;
+it does not duplicate their operational manuals.
 
 ## Outside the product
 
