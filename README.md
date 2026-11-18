@@ -42,8 +42,11 @@ uv run pytest
 
 ## Where things are
 
+- [AGENTS.md](AGENTS.md) — the rules index to read first
 - [BRIEF.md](BRIEF.md) — scope and fixed decisions
 - [ROADMAP.md](ROADMAP.md) — feature cycles and current work
+- [BACKLOG.md](BACKLOG.md) — deferred work and reopen conditions
+- [docs/pathologies.md](docs/pathologies.md) — observed failure shapes and evidence
 - [docs/domain.md](docs/domain.md) — components, responsibilities and run boundaries
 - [docs/glossary.md](docs/glossary.md) — canonical vocabulary
 - [docs/sdd.md](docs/sdd.md) — process, document caps and evidence rules

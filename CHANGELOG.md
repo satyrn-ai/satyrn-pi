@@ -13,3 +13,5 @@
   dependency installs and pins Superpowers for contributor Pi at
   `bb92a77` (`v7.0.0`).
 - Split phase 2 into six stacked cycles, P2.1 to P2.6, in the roadmap.
+- Add the root rules index, a routing skill, and the backlog and pathology
+  records, with document budgets tightening the preserved caps for new work.
