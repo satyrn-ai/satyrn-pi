@@ -8,7 +8,7 @@ a later upgrade is decided and reviewed.
 
 - Source: `github.com/obra/superpowers`
 - Pinned commit: `bb92a77741419a4ab5f06e711a283343f1ada0c3`
-- Description: `v6.1.1-56-gbb92a77`, 2026-10-09
+- Description: `v7.0.0`, 2026-10-09
 - Installed as the Pi git package `git:github.com/obra/superpowers@bb92a77741419a4ab5f06e711a283343f1ada0c3`
 
 This is the revision that drove P1.1 and P1.2. It is pinned rather than

@@ -11,5 +11,5 @@
   exercised on a fixture tree.
 - Add the contributor README and `npm run setup`, which runs the locked
   dependency installs and pins Superpowers for contributor Pi at
-  `bb92a77` (`v6.1.1-56-gbb92a77`).
+  `bb92a77` (`v7.0.0`).
 - Split phase 2 into six stacked cycles, P2.1 to P2.6, in the roadmap.

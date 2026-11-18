@@ -20,7 +20,7 @@ const SOURCE = "git:github.com/obra/superpowers";
 test("SUPERPOWERS is a frozen pin", () => {
   assert.equal(SUPERPOWERS.source, SOURCE);
   assert.equal(SUPERPOWERS.commit, PIN);
-  assert.equal(SUPERPOWERS.describe, "v6.1.1-56-gbb92a77");
+  assert.equal(SUPERPOWERS.describe, "v7.0.0");
   assert.ok(Object.isFrozen(SUPERPOWERS));
 });
 

@@ -11,7 +11,7 @@ import { pathToFileURL } from "node:url";
 export const SUPERPOWERS = Object.freeze({
   source: "git:github.com/obra/superpowers",
   commit: "bb92a77741419a4ab5f06e711a283343f1ada0c3",
-  describe: "v6.1.1-56-gbb92a77",
+  describe: "v7.0.0",
 });
 
 export function settingsPath(env = process.env) {

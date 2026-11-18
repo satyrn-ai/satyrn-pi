@@ -23,7 +23,7 @@ npm run setup
 `npm run setup` runs `npm ci` and `uv sync`, then installs the Superpowers
 contributor skills into your user-level Pi configuration
 (`~/.pi/agent/settings.json`, or `$PI_CODING_AGENT_DIR` if set) at the pinned
-commit `bb92a77741419a4ab5f06e711a283343f1ada0c3` (`v6.1.1-56-gbb92a77`).
+commit `bb92a77741419a4ab5f06e711a283343f1ada0c3` (`v7.0.0`).
 That last step changes configuration shared with your other Pi projects: if a
 Superpowers entry already exists at a different or unpinned revision, setup
 refuses and tells you to re-run with `npm run setup -- --yes` to change it.
