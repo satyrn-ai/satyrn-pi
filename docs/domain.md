@@ -193,10 +193,12 @@ the trial as stopped rather than failed.
 
 Grading happens after the Pi session, outside it and outside the workspace. With
 the child processes gone, the eval package copies its own grader tests in and
-runs them. The worker cannot substitute a test or alter the grader copy. The
-grading stage records `leaked.json`, `layout.json`, the contamination marker,
-`acceptance.json` and `stalled.json` before it produces a verdict. The trial
-includes this grading stage even though its Pi session has already ended.
+runs them. The worker cannot substitute a test or alter the grader copy.
+**Source evidence:** the pinned source's grading stage records `leaked.json`,
+`layout.json`, the contamination marker, `acceptance.json` and `stalled.json`
+before it produces a verdict. P6.1 owns whether the port keeps or revises those
+artifact names. The trial includes this grading stage even though its Pi session
+has already ended.
 
 ### 5. Keep the evidence
 

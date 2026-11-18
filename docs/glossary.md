@@ -9,7 +9,7 @@ It carries definitions, not architectural obligations; see [Domain](domain.md) f
 
 <!-- zensical-glossary-aliases: agent configuration -->
 
-An agent: the task-completing program, Pi plus the worker extension and remedies it loads, separate from the model it uses. Vanilla, Base, Easy, Medium and Hard are agents; they differ in worker state and enabled remedies, not in kind.
+An agent: the task-completing program, Pi plus its trace recorder, the optional worker extension and the remedies it loads, separate from the model it uses. Vanilla, Base, Easy, Medium and Hard are agents; they differ in worker state and enabled remedies, not in kind.
 
 ### Vanilla
 

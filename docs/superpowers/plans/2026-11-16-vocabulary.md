@@ -38,7 +38,7 @@ model is fixed and the task composes — the opposite axis. `rung` also carries
 two meanings in the source: a stage and a single task (`learn/glossary.md`,
 `### Rung`; `ladder/ladder/rungs.py:261` numbers them in one global sequence).
 The port already drops both: `uvx satyrn-pi eval --suite <name>`, and the
-[applicability mapping](../rules-applicability.md) maps `ladder/` to the new
+[applicability mapping](../../rules-applicability.md) maps `ladder/` to the new
 eval package.
 
 ## What the inventory measured
@@ -62,7 +62,7 @@ on 2026-11-17.
 
 ## Desk walk, 2026-11-17
 
-Run Vanilla on the Easy [Eval suite](../glossary.md#eval-suite) and Base with an
+Run Vanilla on the Easy [Eval suite](../../glossary.md#eval-suite) and Base with an
 empty preset on the same suite. Both use the same eval machinery to record
 evidence for quality and budget.
 
