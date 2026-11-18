@@ -92,10 +92,12 @@ The walk exposed these vocabulary questions and resolved them as follows.
 | A killed job could leave misleading evidence | `trial.json` is created before spawn and atomically replaced at each boundary; partial status never implies completion or a score | No addition; recorded as a run boundary |
 
 The glossary inventory after the walk is ten entries: Agent, Vanilla, Base,
-Remedy, Preset, Eval suite, Task, Job, Trial and Trajectory. The numeric budget
-is not decided here. Its number and scope remain for agreement with Nicola, Ben
-and the implementers in task 2; the walk records the cost of each addition so
-that conversation can price the inventory rather than rediscover it.
+Remedy, Preset, Eval suite, Task, Job, Trial and Trajectory. The proposed numeric
+budget is 25 defined terms, counted as the `###` entries in `docs/glossary.md`;
+aliases do not add a term. The number and scope are submitted with the P1.2 pull
+request, and PR approval by Nicola, Ben and the implementers ratifies them. The
+walk records the cost of each addition so that conversation prices the inventory
+rather than rediscovering it.
 
 ## Rejected alternatives
 
@@ -170,9 +172,11 @@ retired term in a page are different review conversations.
    retained research terms. Walk Vanilla-on-Easy and Base-with-an-empty-preset,
    and record every ambiguity the walk exposes as a glossary change or a budget
    argument.
-2. P1.2: agree the numeric budget with Nicola, Ben and the implementers, and
-   record the number and its scope in `docs/glossary.md`. Confirm or refuse the
-   Harbor mapping in the same record, term by term.
+2. P1.2: record the proposed numeric budget of 25 defined terms, counted only as
+   `###` entries in `docs/glossary.md`, with aliases excluded. Submit it with the
+   cycle PR; PR approval by Nicola, Ben and the implementers ratifies the number
+   and scope. Confirm or refuse the Harbor mapping in the same record, term by
+   term.
 3. P2.1: add the retired-terms table as data, and the checker with its tests
    shown to fail first — one test per rule above, plus one for the exemption
    comment and one for a heading.

@@ -5,6 +5,8 @@ This dictionary defines the project's shared vocabulary in short, reusable entri
 Use it to check a term while reading; aliases support automatic site links.
 It carries definitions, not architectural obligations; see [Domain](domain.md) for responsibilities and where things live.
 
+**Vocabulary budget:** 25 defined terms, counted as the `###` entries in this file. Aliases do not add a term.
+
 ### Agent
 
 <!-- zensical-glossary-aliases: agent configuration -->
