@@ -169,6 +169,25 @@ export function checkLifecycle(doc) {
   return findings;
 }
 
+export function checkEvidenceWording(doc) {
+  const findings = [];
+  for (const section of doc.text.split(/^## /m).slice(1)) {
+    if (!/\bn\s*=\s*1\b/.test(section)) continue;
+    const terms = [...new Set([...section.matchAll(/\b(null|void|separated)\b/gi)].map((m) => m[1].toLowerCase()))];
+    if (terms.length > 0) {
+      const heading = section.split("\n")[0].trim();
+      findings.push(
+        finding(
+          doc,
+          "evidence-wording",
+          `section "${heading}" states n = 1 and says ${terms.join(", ")}`,
+        ),
+      );
+    }
+  }
+  return findings;
+}
+
 async function readMarkdown(dir, root) {
   const full = path.join(root, dir);
   if (!existsSync(full)) return [];
