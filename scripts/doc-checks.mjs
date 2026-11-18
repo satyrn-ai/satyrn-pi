@@ -248,19 +248,15 @@ if (invokedDirectly) {
   const root = process.cwd();
   const docs = await collectDocuments(root);
   const findings = [
-    ...docs.specs.map((d) => capFor(d, "spec")),
-    ...docs.plans.map((d) => capFor(d, "plan")),
-    docs.agents && capFor(docs.agents, "agents"),
-    docs.roadmap && capFor(docs.roadmap, "roadmap"),
-    docs.backlog && capFor(docs.backlog, "backlog"),
-  ]
-    .filter(Boolean)
-    .flat();
+    ...docs.specs.map((doc) => checkCaps({ ...doc, kind: "spec" })),
+    ...docs.plans.map((doc) => checkCaps({ ...doc, kind: "plan" })),
+    ...(docs.agents ? checkCaps({ ...docs.agents, kind: "agents" }) : []),
+    ...(docs.roadmap ? checkCaps({ ...docs.roadmap, kind: "roadmap" }) : []),
+    ...(docs.backlog ? checkCaps({ ...docs.backlog, kind: "backlog" }) : []),
+    ...docs.plans.flatMap(checkLifecycle),
+    ...docs.research.flatMap(checkEvidenceWording),
+  ].flat();
   for (const item of findings) console.log(`${item.path}: ${item.rule}: ${item.message}`);
   if (findings.length > 0) process.exitCode = 1;
   else console.log("document checks: no findings");
-}
-
-function capFor(doc, kind) {
-  return checkCaps({ ...doc, kind });
 }

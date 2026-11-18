@@ -42,9 +42,9 @@ split the cycle or link evidence, not delete reasoning.
 ## Checks
 
 Run `npm test` and `uv run pytest`. Both stay model-, network- and
-subprocess-free. A cap, lifecycle and evidence check arrives in P2.3; run its
-command once it exists. Every new test is shown to fail before the code that
-passes it.
+subprocess-free. Run `npm run check:docs` for cap, lifecycle and evidence
+findings; the same checks run in the default suite. Every new test is shown to
+fail before the code that passes it.
 
 ## Boundaries
 
