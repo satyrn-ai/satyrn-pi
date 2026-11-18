@@ -6,7 +6,7 @@ import { existsSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { BUDGET, LEGACY_ARCHIVED_WITHOUT_RESULT } from "./doc-budgets.mjs";
+import { BUDGET } from "./doc-budgets.mjs";
 
 export { BUDGET };
 
@@ -153,7 +153,7 @@ export function checkLifecycle(doc) {
       findings.push(finding(doc, "plan-lifecycle", `archived plan has lifecycle "${state}"`));
     }
     const terminal = headings.at(-1) === "Result";
-    if (!terminal && !LEGACY_ARCHIVED_WITHOUT_RESULT.includes(doc.path)) {
+    if (!terminal) {
       findings.push(
         finding(doc, "plan-archive-result", "archived plan has no terminal ## Result"),
       );

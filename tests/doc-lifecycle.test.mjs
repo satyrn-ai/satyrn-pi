@@ -3,7 +3,6 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { LEGACY_ARCHIVED_WITHOUT_RESULT } from "../scripts/doc-budgets.mjs";
 import { checkLifecycle, collectDocuments, parseFrontMatter } from "../scripts/doc-checks.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -59,10 +58,16 @@ test("an archived plan needs a terminal Result", () => {
   assert.ok(notTerminal.some((f) => f.rule === "plan-archive-result"));
 });
 
-test("only the named legacy archive is excused", () => {
-  const legacy = LEGACY_ARCHIVED_WITHOUT_RESULT[0];
-  assert.equal(LEGACY_ARCHIVED_WITHOUT_RESULT.length, 1);
-  assert.equal(check(legacy, archived("## Notes\n"), true).length, 0);
-  const other = check("archive/2026-11-18-other.md", archived("## Notes\n"), true);
-  assert.ok(other.some((f) => f.rule === "plan-archive-result"));
+test("an archive path never bypasses the terminal Result rule", () => {
+  const p1 = "docs/superpowers/plans/archive/2026-11-17-p1.1-repository-setup.md";
+  const findings = check(p1, archived("## Notes\n"), true);
+  assert.ok(findings.some((f) => f.rule === "plan-archive-result"));
+});
+
+test("the archived P1.1 plan carries a terminal Result", async () => {
+  const docs = await collectDocuments(repoRoot);
+  const p1 = docs.plans.find((d) => d.path.endsWith("2026-11-17-p1.1-repository-setup.md"));
+  assert.equal(p1.archived, true);
+  assert.match(p1.text, /^## Result$/m);
+  assert.deepEqual(checkLifecycle(p1), []);
 });

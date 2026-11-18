@@ -12,8 +12,3 @@ export const BUDGET = Object.freeze({
   backlogEntry: 1200,
   planFenced: 0.25,
 });
-
-// Archived before the lifecycle gate existed; archived plans are never edited.
-export const LEGACY_ARCHIVED_WITHOUT_RESULT = Object.freeze([
-  "docs/superpowers/plans/archive/2026-11-17-p1.1-repository-setup.md",
-]);
