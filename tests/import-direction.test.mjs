@@ -59,3 +59,8 @@ test("the repository passes in both directions", async () => {
   assert.deepEqual(workers.flatMap(checkWorkerSources), []);
   assert.deepEqual(evals.flatMap(checkEvalSources), []);
 });
+
+test("side-effect worker imports and comma-separated eval imports fail", () => {
+  assert.equal(jsCheck('import "satyrn_pi";\n').length, 1);
+  assert.equal(pyCheck("import json, remedies\n").length, 1);
+});

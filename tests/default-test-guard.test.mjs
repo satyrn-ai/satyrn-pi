@@ -56,3 +56,15 @@ test("the repository's default tests pass the tripwire", async () => {
   assert.ok(files.length > 0, "no default tests found");
   assert.deepEqual(files.flatMap((file) => checkTestText(file, rules)), []);
 });
+
+test("side-effect imports and string-bearing lines are caught", () => {
+  const sideEffect = (name) => "import " + JSON.stringify(moduleName(name)) + ";";
+  assert.equal(check(sideEffect(["child", "process"].join("_"))).length, 1);
+  const url = "const url = " + JSON.stringify("https://example.test") + "; " + callOf(["fet", "ch"].join(""), "url");
+  assert.equal(check(url).length, 1);
+});
+
+test("method calls named fetch or prefetch pass", () => {
+  assert.equal(check("client." + callOf(["fet", "ch"].join(""), "url")).length, 0);
+  assert.equal(check("pre" + callOf(["fet", "ch"].join(""), "url")).length, 0);
+});

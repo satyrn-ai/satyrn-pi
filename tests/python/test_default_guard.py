@@ -73,3 +73,16 @@ def test_the_python_tests_pass_the_tripwire():
     for file in files:
         findings.extend(guard.scan_source(file, Path(file).read_text(), rules()))
     assert findings == []
+
+def test_aliases_and_spacing_are_caught(tmp_path):
+    guard = load_guard()
+    cases = [
+        f"import {SUB} as sp\n",
+        f"{OS_IMPORT} as run\n",
+        f"{OS_CALL.replace('(', ' (')}'x')\n",
+        f"x = 'a#b'\n{OS_CALL}'x')\n",
+    ]
+    for i, text in enumerate(cases):
+        path = tmp_path / f"alias_{i}.py"
+        path.write_text(text)
+        assert guard.scan_source(str(path), text, rules()), text

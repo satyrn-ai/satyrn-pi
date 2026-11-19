@@ -1,10 +1,10 @@
 """Python side of the default-test tripwire.
 
-Reads the shared rule table and reports process or network usage in the default
-Python tests. It reports; it never edits.
+Parses the default Python tests with `ast` and reports process or network
+imports and calls. It reports; it never edits.
 """
+import ast
 import json
-import re
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -15,57 +15,43 @@ def load_rules(path=None):
     return json.loads(rules_path.read_text())
 
 
-def _strip_comment(line):
-    return line.split("#", 1)[0]
-
-
-IMPORT = re.compile(r"^\s*import\s+(.+)$")
-FROM = re.compile(r"^\s*from\s+([A-Za-z0-9_.]+)\s+import\s+(.+)$")
+def _add(findings, path, node, message):
+    findings.append(
+        {
+            "path": str(path),
+            "rule": "default-test",
+            "line": getattr(node, "lineno", 0),
+            "message": message,
+        }
+    )
 
 
 def scan_source(path, text, rules):
     findings = []
-    for number, raw in enumerate(text.splitlines(), start=1):
-        line = _strip_comment(raw)
-        modules = []
-        from_names = []
-        direct = IMPORT.match(line)
-        if direct:
-            modules = [part.strip().split(".")[0] for part in direct.group(1).split(",")]
-        source = FROM.match(line)
-        if source:
-            modules = [source.group(1).split(".")[0]]
-            from_names = [name.strip() for name in source.group(2).split(",")]
-        for module in modules:
+    try:
+        tree = ast.parse(text)
+    except SyntaxError:
+        return findings
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                root = alias.name.split(".")[0]
+                if root in rules["pythonModules"]:
+                    _add(findings, path, node, f"default tests must not import {alias.name}")
+        elif isinstance(node, ast.ImportFrom):
+            module = (node.module or "").split(".")[0]
             if module in rules["pythonModules"]:
-                findings.append(
-                    {
-                        "path": str(path),
-                        "rule": "default-test",
-                        "line": number,
-                        "message": f"default tests must not import {module}",
-                    }
-                )
-        for call in rules["pythonCalls"]:
-            module, name = call.split(".", 1)
-            if source and module in modules and name in from_names:
-                findings.append(
-                    {
-                        "path": str(path),
-                        "rule": "default-test",
-                        "line": number,
-                        "message": f"default tests must not call {call}",
-                    }
-                )
-            if f"{call}(" in line:
-                findings.append(
-                    {
-                        "path": str(path),
-                        "rule": "default-test",
-                        "line": number,
-                        "message": f"default tests must not call {call}",
-                    }
-                )
+                _add(findings, path, node, f"default tests must not import {module}")
+            if module == "os":
+                for alias in node.names:
+                    if f"os.{alias.name}" in rules["pythonCalls"]:
+                        _add(findings, path, node, f"default tests must not call os.{alias.name}")
+        elif isinstance(node, ast.Call):
+            func = node.func
+            if isinstance(func, ast.Attribute) and isinstance(func.value, ast.Name):
+                name = f"{func.value.id}.{func.attr}"
+                if name in rules["pythonCalls"]:
+                    _add(findings, path, node, f"default tests must not call {name}")
     return findings
 
 
