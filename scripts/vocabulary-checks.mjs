@@ -7,19 +7,45 @@ import { BUDGET } from "./doc-budgets.mjs";
 import { RETIRED_TERMS, SCOPE_EXCLUDE, SCOPE_INCLUDE } from "./retired-terms.mjs";
 
 const EXEMPTION = /<!--\s*vocabulary:\s*(\S.*?)\s*-->/;
+const FENCE = /^ {0,3}(`{3,}|~{3,})(.*)$/;
+
+// CommonMark-style fences: up to three leading spaces, backtick or tilde, and a
+// closing delimiter of the same character at least as long as the opener.
+function fenceMask(text) {
+  const mask = new Array(text.split("\n").length).fill(false);
+  let open = null;
+  text.split("\n").forEach((line, index) => {
+    const match = FENCE.exec(line);
+    if (!open) {
+      if (match && !(match[1][0] === "`" && match[2].includes("`"))) {
+        open = { char: match[1][0], length: match[1].length };
+        mask[index] = true;
+      }
+      return;
+    }
+    mask[index] = true;
+    if (
+      match &&
+      match[1][0] === open.char &&
+      match[1].length >= open.length &&
+      match[2].trim() === ""
+    ) {
+      open = null;
+    }
+  });
+  return mask;
+}
 
 export function checkRetiredTerms(doc) {
   const findings = [];
-  let fenced = false;
+  const masked = fenceMask(doc.text);
   let exemptNext = false;
   doc.text.split("\n").forEach((line, index) => {
-    if (line.startsWith("```")) {
-      fenced = !fenced;
+    if (masked[index]) {
       exemptNext = false;
       return;
     }
-    if (fenced) return;
-    const heading = /^#{1,6} /.test(line);
+    const heading = /^ {0,3}#{1,6}[ \t]/.test(line);
     const comments = EXEMPTION.exec(line);
     const exempt = !heading && (Boolean(comments) || exemptNext);
     exemptNext = Boolean(comments) && !heading;
@@ -39,15 +65,11 @@ export function checkRetiredTerms(doc) {
 }
 
 export function checkGlossaryBudget(text, budget = BUDGET.glossary) {
-  let fenced = false;
+  const masked = fenceMask(text);
   let count = 0;
-  for (const line of text.split("\n")) {
-    if (line.startsWith("```")) {
-      fenced = !fenced;
-      continue;
-    }
-    if (!fenced && /^### /.test(line)) count += 1;
-  }
+  text.split("\n").forEach((line, index) => {
+    if (!masked[index] && /^### /.test(line)) count += 1;
+  });
   return count > budget
     ? [
         {

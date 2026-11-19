@@ -81,3 +81,18 @@ test("the repository glossary fits its budget and states the number", async () =
   assert.equal(checkGlossaryBudget(text, BUDGET.glossary).length, 0);
   assert.match(text, /Vocabulary budget:\*\* 25/);
 });
+
+test("fence handling follows common Markdown forms", () => {
+  assert.equal(check("```\n# stage\n  ```\nThe stage is outside.\n").length, 1);
+  assert.equal(check("~~~\n# stage\n~~~\n").length, 0);
+  assert.equal(check("  ```\n  # stage\n  ```\n").length, 0);
+  assert.equal(check("```\n# stage\n").length, 0);
+});
+
+test("an indented heading is never exempt", () => {
+  assert.equal(check("  ## Stage <!-- vocabulary: source quotation -->\n").length, 1);
+});
+
+test("fence handling applies to glossary counting", () => {
+  assert.equal(checkGlossaryBudget("```\n### Fake\n  ```\n### Real\n", 0).length, 1);
+});
