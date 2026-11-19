@@ -1,0 +1,6 @@
+{
+  "jsModules": ["child_process", "net", "http", "https", "http2", "dgram", "tls"],
+  "jsCalls": ["fetch"],
+  "pythonModules": ["subprocess", "socket", "urllib", "http", "requests", "httpx", "aiohttp"],
+  "pythonCalls": ["os.system", "os.popen"]
+}
