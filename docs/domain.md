@@ -110,7 +110,7 @@ boundary.
 ## Import direction and the boundary
 
 The worker never imports the eval package. The eval package never imports worker
-internals. No package imports or in-process calls cross the boundary. P2.1's
+internals. No package imports or in-process calls cross the boundary. P2.5's
 one-way import check enforces this direction.
 
 Process orchestration still crosses it explicitly:
