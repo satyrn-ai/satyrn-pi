@@ -15,4 +15,13 @@ kept. An empty backlog is valid — do not invent entries to fill this file.
 
 ## Entries
 
-None.
+### Accessibility statement for the site
+
+- **Area:** the documentation site
+- **Deferred:** the source site's footer links an accessibility statement. This
+  site's footer carries only the copyright, and a link to a page that does not
+  exist is worse than no link. The adopted stylesheet's contrast, focus and
+  reduced-motion behaviour still apply.
+- **Reopen when:** the site has more than the home page and the glossary, or a
+  reader or reviewer asks for a statement.
+- **Links:** [P3.1 spec](docs/superpowers/specs/2026-11-19-p3.1-site-identity-design.md)
