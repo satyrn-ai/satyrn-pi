@@ -11,4 +11,5 @@ export const BUDGET = Object.freeze({
   status: 1000,
   backlogEntry: 1200,
   planFenced: 0.25,
+  glossary: 25,
 });

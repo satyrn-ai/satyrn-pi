@@ -4,7 +4,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { checkRetiredTerms, collectScope } from "../scripts/vocabulary-checks.mjs";
+import { readFile } from "node:fs/promises";
+import { BUDGET } from "../scripts/doc-budgets.mjs";
+import { checkGlossaryBudget, checkRetiredTerms, collectScope } from "../scripts/vocabulary-checks.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const check = (text, p = "docs/example.md") => checkRetiredTerms({ path: p, text });
@@ -62,4 +64,20 @@ test("the scope includes product docs and excludes process records", async () =>
 test("the repository scope returns no retired-term findings", async () => {
   const docs = await collectScope(repoRoot);
   assert.deepEqual(docs.flatMap(checkRetiredTerms), []);
+});
+
+test("a glossary over 25 terms fails", () => {
+  const entries = (n) => Array.from({ length: n }, (_, i) => `### Term ${i + 1}`).join("\n\n");
+  const over = checkGlossaryBudget(entries(26));
+  assert.equal(over.length, 1);
+  assert.equal(over[0].rule, "glossary-budget");
+  assert.equal(checkGlossaryBudget(entries(25)).length, 0);
+  const aliases = entries(25).replace("### Term 1", "### Term 1\n\n<!-- zensical-glossary-aliases: x -->");
+  assert.equal(checkGlossaryBudget(aliases).length, 0);
+});
+
+test("the repository glossary fits its budget and states the number", async () => {
+  const text = await readFile(path.join(repoRoot, "docs/glossary.md"), "utf8");
+  assert.equal(checkGlossaryBudget(text, BUDGET.glossary).length, 0);
+  assert.match(text, /Vocabulary budget:\*\* 25/);
 });
