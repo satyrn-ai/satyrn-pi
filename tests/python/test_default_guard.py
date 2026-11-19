@@ -86,3 +86,14 @@ def test_aliases_and_spacing_are_caught(tmp_path):
         path = tmp_path / f"alias_{i}.py"
         path.write_text(text)
         assert guard.scan_source(str(path), text, rules()), text
+
+def test_os_aliases_are_caught(tmp_path):
+    guard = load_guard()
+    cases = [
+        "import os as operating\noperating." + "system('x')\n",
+        "from os import " + "system as run\nrun('x')\n",
+    ]
+    for i, text in enumerate(cases):
+        path = tmp_path / f"os_alias_{i}.py"
+        path.write_text(text)
+        assert guard.scan_source(str(path), text, rules()), text

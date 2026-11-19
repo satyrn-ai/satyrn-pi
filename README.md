@@ -8,7 +8,7 @@ worker, remedies, eval CLI, suites and grading are not implemented yet; see
 
 ## Prerequisites
 
-- Node.js 20 or newer
+- Node.js 22.19 or newer
 - [uv](https://docs.astral.sh/uv/)
 - Pi within this package's peer range `^1.1.0` (the port targets 1.5.2)
 

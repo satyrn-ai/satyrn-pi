@@ -68,3 +68,11 @@ test("method calls named fetch or prefetch pass", () => {
   assert.equal(check("client." + callOf(["fet", "ch"].join(""), "url")).length, 0);
   assert.equal(check("pre" + callOf(["fet", "ch"].join(""), "url")).length, 0);
 });
+
+test("regex literals do not hide following calls or imports", () => {
+  const regex = String.raw`/https?:\/\//`;
+  const call = "const p = " + regex + "; " + callOf(["fet", "ch"].join(""), "url");
+  assert.equal(check(call).length, 1);
+  const imp = "const p = " + String.raw`/a\/\//` + "; " + importOf(["child", "process"].join("_"));
+  assert.equal(check(imp).length, 1);
+});

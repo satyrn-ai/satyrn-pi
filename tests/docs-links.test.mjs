@@ -78,3 +78,29 @@ test("links inside inline and fenced code are ignored", async (t) => {
   const docs = await collectLinkDocuments(dir);
   assert.deepEqual(checkLinks(docs[0], dir), []);
 });
+
+test("a longer fence protects a shorter delimiter inside it", async (t) => {
+  const dir = await tree(t, {
+    "docs/a.md": "````md\n```\nnot a close\n```\n````\n[nope](missing.md)\n",
+  });
+  const docs = await collectLinkDocuments(dir);
+  const findings = checkLinks(docs[0], dir);
+  assert.equal(findings.length, 1);
+  assert.equal(findings[0].rule, "broken-link");
+});
+
+test("an indented closing fence does not hide a following link", async (t) => {
+  const dir = await tree(t, {
+    "docs/a.md": "```md\ncode\n  ```\n[nope](missing.md)\n",
+  });
+  const docs = await collectLinkDocuments(dir);
+  assert.equal(checkLinks(docs[0], dir).length, 1);
+});
+
+test("a shorter delimiter inside a longer fence does not reopen it", async (t) => {
+  const dir = await tree(t, {
+    "docs/a.md": "````md\n```\n````\n[nope](missing.md)\n",
+  });
+  const docs = await collectLinkDocuments(dir);
+  assert.equal(checkLinks(docs[0], dir).length, 1);
+});

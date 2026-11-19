@@ -2,6 +2,7 @@
 import { existsSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
+import { scanFences } from "./markdown-fence.mjs";
 
 const EXCLUDE = ["docs/sdd.md", "docs/provenance", "docs/superpowers/plans/archive"];
 
@@ -35,17 +36,12 @@ export async function collectLinkDocuments(root) {
 }
 
 function withoutCode(text) {
-  const lines = [];
-  let fenced = false;
-  for (const line of text.split("\n")) {
-    if (/^ {0,3}(?:```|~~~)/.test(line)) {
-      fenced = !fenced;
-      lines.push("");
-      continue;
-    }
-    lines.push(fenced ? "" : line);
-  }
-  return lines.join("\n").replace(/`[^`\n]*`/g, "");
+  const { inFence } = scanFences(text);
+  return text
+    .split("\n")
+    .map((line, index) => (inFence[index] ? "" : line))
+    .join("\n")
+    .replace(/`[^`\n]*`/g, "");
 }
 
 export function checkLinks(doc, root) {

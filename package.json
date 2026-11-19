@@ -10,7 +10,7 @@
     "url": "git+https://github.com/satyrn-ai/satyrn-pi.git"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.19.0"
   },
   "scripts": {
     "check:docs": "node scripts/doc-checks.mjs",
