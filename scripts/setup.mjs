@@ -19,16 +19,49 @@ export function settingsPath(env = process.env) {
   return path.join(dir, "settings.json");
 }
 
+function parseGitSource(input) {
+  let source = String(input).trim().replace(/^git\+/, "");
+  if (source.startsWith("git:")) source = source.slice(4);
+  let host;
+  let rest;
+  if (source.includes("://")) {
+    source = source.replace(/^[a-z+]+:\/\//i, "").replace(/^[^@/]+@/, "");
+    const slash = source.indexOf("/");
+    if (slash < 0) return null;
+    host = source.slice(0, slash);
+    rest = source.slice(slash + 1);
+  } else {
+    const scp = source.match(/^(?:[^/@]+@)?([^/:]+):(.+)$/);
+    if (scp) {
+      host = scp[1];
+      rest = scp[2];
+    } else {
+      const slash = source.indexOf("/");
+      if (slash < 0) return null;
+      host = source.slice(0, slash);
+      rest = source.slice(slash + 1);
+    }
+  }
+  let ref = null;
+  const at = rest.lastIndexOf("@");
+  if (at > 0) {
+    ref = rest.slice(at + 1);
+    rest = rest.slice(0, at);
+  }
+  rest = rest.replace(/\.git$/, "").replace(/\/+$/, "").toLowerCase();
+  return { identity: `${host.toLowerCase()}/${rest}`, ref };
+}
+
 export function findSuperpowersEntry(settings) {
   const packages = Array.isArray(settings?.packages) ? settings.packages : [];
+  const wanted = parseGitSource(SUPERPOWERS.source)?.identity;
   for (const entry of packages) {
-    if (typeof entry !== "string") continue;
-    if (entry === SUPERPOWERS.source) {
-      return { status: "unpinned", entry };
-    }
-    if (entry.startsWith(`${SUPERPOWERS.source}@`)) {
-      return { status: "pinned", entry, ref: entry.slice(SUPERPOWERS.source.length + 1) };
-    }
+    const source = typeof entry === "string" ? entry : entry?.source;
+    if (typeof source !== "string") continue;
+    const parsed = parseGitSource(source);
+    if (!parsed || parsed.identity !== wanted) continue;
+    if (parsed.ref) return { status: "pinned", entry, ref: parsed.ref };
+    return { status: "unpinned", entry };
   }
   return { status: "absent" };
 }

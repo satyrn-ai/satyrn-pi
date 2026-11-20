@@ -102,3 +102,16 @@ test("checking does not modify repository files", async () => {
   docs.plans.forEach((d) => checkCaps({ ...d, kind: "plan" }, BUDGET));
   assert.equal(await readFile(path.join(repoRoot, "AGENTS.md"), "utf8"), before);
 });
+
+test("tilde and indented fences count toward the plan fence cap", () => {
+  const tilde = `# P\n\n${"~~~\ncode\n~~~\n".repeat(20)}${lines(10)}`;
+  assert.ok(checkCaps({ path: "p.md", text: tilde, kind: "plan" }, BUDGET).some((f) => f.rule === "plan-fenced"));
+  const indented = `# P\n\n${"  ```\n  code\n  ```\n".repeat(20)}${lines(10)}`;
+  assert.ok(checkCaps({ path: "p.md", text: indented, kind: "plan" }, BUDGET).some((f) => f.rule === "plan-fenced"));
+});
+
+test("a leftover None sentinel does not disable backlog checks", () => {
+  const text = "# B\n\n## Entries\n\nNone.\n\n### Item\n\n- **Deferred:** now\n";
+  const findings = checkCaps({ path: "BACKLOG.md", text, kind: "backlog" }, BUDGET);
+  assert.ok(findings.some((f) => f.rule === "backlog-reopen"));
+});

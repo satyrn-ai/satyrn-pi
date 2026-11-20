@@ -4,9 +4,9 @@ Scope: [BRIEF](BRIEF.md). Process: [Superpowers/SDD and roadmap rules](docs/rule
 
 ## Now
 
-In flight: [P2.5](#phase-2--sdd-setup), the default-test tripwire and one-way import check, stacked on P2.4 and the earlier cycles in review (#7–#10).
+In flight: [P2.6](#phase-2--sdd-setup), the discovery demonstration and phase close; Phase 2 is complete pending review of #7–#12, and the rows flip to closed only after the stack merges.
 Parked: preset choices and rented-host qualification await their [research owners](BRIEF.md#decisions-the-research-documents-own).
-Next: [P2.6](#phase-2--sdd-setup), the new-contributor discovery demonstration and phase close, after P2.5.
+Next: [P3.1](#phase-3--zensical-documentation), the documentation site, after Phase 2 closes.
 
 Rows are initial proposals. Brainstorm each phase during the port and split or
 add cycles before implementation; one row does not limit a phase to one cycle.
@@ -32,13 +32,13 @@ presets select remedies.
 | **P2.3** | Infrastructure: re-earned cap, plan-lifecycle and evidence-wording checks, each shown to fail first, wired into the default Node suite. The cap check enforces P2.2's budgets (spec 150, plan 250, reviewer brief 30), the lifecycle check covers plans, and the wording check covers research notes; an over-budget document goes to a research note or a split cycle, not deletion. | Runtime measurement claims; tests requiring obsolete glossary headings; the vocabulary gates (P2.4). | in flight 2026-11-18 — stacked on P2.2; spec 150 / plan 250 / brief 30 / AGENTS 80; `npm run check:docs` and the default suite. [Spec](docs/superpowers/specs/2026-11-18-p2.3-gates-design.md), [plan](docs/superpowers/plans/2026-11-18-p2.3-gates.md). |
 | **P2.4** | Infrastructure: P1.2's numeric jargon budget and retired-term check, with point-of-use exemptions and a planted violation that fails before it is reverted. | A blanket ban on ordinary English; editing documents from the check; hand-maintained exemption lists. | in flight 2026-11-18 — stacked on P2.3; product-facing scope, 25-term budget, plurals matched, fences skipped. [Spec](docs/superpowers/specs/2026-11-18-p2.4-vocabulary-gates-design.md), [plan](docs/superpowers/plans/2026-11-18-p2.4-vocabulary-gates.md). |
 | **P2.5** | Infrastructure: the default-test tripwire and the one-way import check, each shown to fail first. | Runtime code; model, network or subprocess in the default suites. | in flight 2026-11-18 — stacked on P2.4; one shared rule table, JS guard in `npm test`, Python guard in `pytest`, import check with a planted proof. [Spec](docs/superpowers/specs/2026-11-18-p2.5-tripwire-import-design.md), [plan](docs/superpowers/plans/2026-11-18-p2.5-tripwire-import.md). |
-| **P2.6** | A new contributor's agent finds the rules and follows a cycle, using this phase's own artifacts; phase close resolves every active path and runs both default suites. | Inventing a product feature to prove process; an unreviewed negative outcome; runtime setup claims. | proposed — after P2.5. |
+| **P2.6** | A new contributor's agent finds the rules and follows a cycle, using this phase's own artifacts; phase close resolves every active path and runs both default suites. | Inventing a product feature to prove process; an unreviewed negative outcome; runtime setup claims. | in flight 2026-11-18 — stacked on P2.5 (#11); discovery run recorded (one budget number omitted, no doc gap); link test green; closure waits on #7–#12. [Spec](docs/superpowers/specs/2026-11-18-p2.6-demonstration-close-design.md), [plan](docs/superpowers/plans/2026-11-18-p2.6-demonstration-close.md). |
 
 ## Phase 3 — Zensical documentation
 
 | Cycle | Ships | Excludes | Status |
 | --- | --- | --- | --- |
-| **P3.1** | Infrastructure: a Zensical site over plain Markdown, adapting `satyrn-ai/satyrn-website`'s Satyrn theme, with installer/contributor navigation. Configure `zensical-glossary` against `docs/glossary.md`: `###` entries, reviewed aliases and automatic first-prose-occurrence links. Set up GitHub Actions for strict builds on PRs and GitHub Pages deployment from main; record and verify the public website URL. Check theme rendering, glossary links and preview under the [site acceptance rules](docs/rules-applicability.md#documentation-site-acceptance). Ben reviews navigation and terminology. | Learning centre, lessons, challenge and gamification; website blog/hero features; runtime setup claims; misleading legacy aliases. | proposed — after P2.1. |
+| **P3.1** | Infrastructure: a Zensical site over plain Markdown, adapting `satyrn-ai/satyrn-website`'s Satyrn theme, with installer/contributor navigation. Configure `zensical-glossary` against `docs/glossary.md`: `###` entries, reviewed aliases and automatic first-prose-occurrence links. Set up GitHub Actions for strict builds on PRs and GitHub Pages deployment from main; record and verify the public website URL. Check theme rendering, glossary links and preview under the [site acceptance rules](docs/rules-applicability.md#documentation-site-acceptance). Ben reviews navigation and terminology. | Learning centre, lessons, challenge and gamification; website blog/hero features; runtime setup claims; misleading legacy aliases. | proposed — after Phase 2. |
 
 ## Phase 4 — Getting Started setup: llama.cpp
 

@@ -2,9 +2,20 @@
 // length and newlines) so matches never come from comments and line numbers stay
 // aligned with the original text.
 
+const REGEX_PRECEDERS = new Set(["(", "[", "{", "=", ",", ";", ":", "!", "&", "|", "?", "+", "-", "*", "%", "^", "~", "<", ">"]);
+const REGEX_KEYWORDS = new Set([
+  "return", "typeof", "instanceof", "in", "of", "new", "delete", "void",
+  "throw", "case", "do", "else", "yield", "await",
+]);
+
+const regexAllowed = (lastChar, lastWord) =>
+  lastChar === "" || REGEX_PRECEDERS.has(lastChar) || REGEX_KEYWORDS.has(lastWord);
+
 export function stripJsComments(text) {
   let out = "";
   let quote = null;
+  let lastChar = "";
+  let lastWord = "";
   let index = 0;
   while (index < text.length) {
     const char = text[index];
@@ -46,7 +57,38 @@ export function stripJsComments(text) {
       }
       continue;
     }
+    if (char === "/" && regexAllowed(lastChar, lastWord)) {
+      out += char;
+      index += 1;
+      let inClass = false;
+      while (index < text.length) {
+        const current = text[index];
+        if (current === "\\") {
+          out += current + (text[index + 1] ?? "");
+          index += 2;
+          continue;
+        }
+        out += current;
+        if (current === "[") inClass = true;
+        else if (current === "]") inClass = false;
+        else if (current === "/" && !inClass) {
+          index += 1;
+          break;
+        }
+        index += 1;
+      }
+      while (index < text.length && /[a-z]/i.test(text[index])) {
+        out += text[index];
+        index += 1;
+      }
+      lastChar = "";
+      lastWord = "";
+      continue;
+    }
     out += char;
+    if (!/\s/.test(char)) lastChar = char;
+    if (/[A-Za-z_$]/.test(char)) lastWord += char;
+    else if (!/\s/.test(char)) lastWord = "";
     index += 1;
   }
   return out;

@@ -39,3 +39,10 @@ test("claims in different sections do not collide", () => {
 test("n = 1 without a banned claim passes", () => {
   assert.equal(check(section("Presence", "At n = 1 the guard fired.")).length, 0);
 });
+
+test("a claim in the preamble is checked", () => {
+  const text = "At n = 1 the arms were separated.\n\n## Notes\n";
+  const findings = check(text);
+  assert.equal(findings.length, 1);
+  assert.match(findings[0].message, /preamble/);
+});

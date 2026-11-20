@@ -4,44 +4,17 @@ import { existsSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { BUDGET } from "./doc-budgets.mjs";
+import { scanFences } from "./markdown-fence.mjs";
 import { RETIRED_TERMS, SCOPE_EXCLUDE, SCOPE_INCLUDE } from "./retired-terms.mjs";
 
 const EXEMPTION = /<!--\s*vocabulary:\s*(\S.*?)\s*-->/;
-const FENCE = /^ {0,3}(`{3,}|~{3,})(.*)$/;
-
-// CommonMark-style fences: up to three leading spaces, backtick or tilde, and a
-// closing delimiter of the same character at least as long as the opener.
-function fenceMask(text) {
-  const mask = new Array(text.split("\n").length).fill(false);
-  let open = null;
-  text.split("\n").forEach((line, index) => {
-    const match = FENCE.exec(line);
-    if (!open) {
-      if (match && !(match[1][0] === "`" && match[2].includes("`"))) {
-        open = { char: match[1][0], length: match[1].length };
-        mask[index] = true;
-      }
-      return;
-    }
-    mask[index] = true;
-    if (
-      match &&
-      match[1][0] === open.char &&
-      match[1].length >= open.length &&
-      match[2].trim() === ""
-    ) {
-      open = null;
-    }
-  });
-  return mask;
-}
 
 export function checkRetiredTerms(doc) {
   const findings = [];
-  const masked = fenceMask(doc.text);
+  const { inFence } = scanFences(doc.text);
   let exemptNext = false;
   doc.text.split("\n").forEach((line, index) => {
-    if (masked[index]) {
+    if (inFence[index]) {
       exemptNext = false;
       return;
     }
@@ -65,10 +38,10 @@ export function checkRetiredTerms(doc) {
 }
 
 export function checkGlossaryBudget(text, budget = BUDGET.glossary) {
-  const masked = fenceMask(text);
+  const { inFence } = scanFences(text);
   let count = 0;
   text.split("\n").forEach((line, index) => {
-    if (!masked[index] && /^### /.test(line)) count += 1;
+    if (!inFence[index] && /^### /.test(line)) count += 1;
   });
   return count > budget
     ? [

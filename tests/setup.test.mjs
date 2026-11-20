@@ -210,3 +210,17 @@ test("README and revision record match the script pin", async () => {
   }
   assert.equal(pkg.scripts.setup, "node scripts/setup.mjs");
 });
+
+test("equivalent git declarations count as existing entries", () => {
+  assert.equal(findSuperpowersEntry({ packages: [{ source: "https://github.com/obra/superpowers@v6.4.2" }] }).status, "pinned");
+  assert.equal(findSuperpowersEntry({ packages: [{ source: "https://github.com/obra/superpowers@v6.4.2" }] }).ref, "v6.4.2");
+  assert.equal(findSuperpowersEntry({ packages: ["https://github.com/obra/superpowers"] }).status, "unpinned");
+  assert.equal(findSuperpowersEntry({ packages: ["git@github.com:obra/superpowers@abc"] }).status, "pinned");
+  assert.equal(findSuperpowersEntry({ packages: ["git@github.com:obra/superpowers@abc"] }).ref, "abc");
+  assert.equal(findSuperpowersEntry({ packages: [{ source: "ssh://git@github.com/obra/superpowers" }] }).status, "unpinned");
+});
+
+test("an object-form entry is refused before consent", () => {
+  const entry = findSuperpowersEntry({ packages: [{ source: "https://github.com/obra/superpowers@v6.4.2" }] });
+  assert.equal(decideAction(entry).action, "refuse");
+});

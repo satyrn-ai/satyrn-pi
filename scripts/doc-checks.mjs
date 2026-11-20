@@ -7,6 +7,7 @@ import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { BUDGET } from "./doc-budgets.mjs";
+import { scanFences } from "./markdown-fence.mjs";
 import {
   checkGlossaryBudget,
   checkRetiredTerms,
@@ -24,14 +25,10 @@ export function countLines(text) {
 export function fencedShare(text) {
   const total = countLines(text);
   if (total === 0) return 0;
+  const { inFence, delimiter } = scanFences(text);
   let fenced = 0;
-  let inside = false;
-  for (const line of text.split("\n")) {
-    if (line.startsWith("```")) {
-      inside = !inside;
-      continue;
-    }
-    if (inside) fenced += 1;
+  for (let index = 0; index < inFence.length; index += 1) {
+    if (inFence[index] && !delimiter[index]) fenced += 1;
   }
   return fenced / total;
 }
@@ -100,7 +97,8 @@ export function checkCaps(doc, budget = BUDGET) {
     }
     case "backlog": {
       const body = doc.text.split(/^## Entries\n/m)[1] ?? "";
-      if (body.trim() === "" || /^none\.?$/im.test(body.trim())) return [];
+      const trimmed = body.trim();
+      if (trimmed === "" || /^none\.?$/i.test(trimmed)) return [];
       const findings = [];
       for (const block of body.split(/^### /m).slice(1)) {
         const title = block.split("\n")[0].trim();
@@ -176,11 +174,18 @@ export function checkLifecycle(doc) {
 
 export function checkEvidenceWording(doc) {
   const findings = [];
-  for (const section of doc.text.split(/^## /m).slice(1)) {
-    if (!/\bn\s*=\s*1\b/.test(section)) continue;
-    const terms = [...new Set([...section.matchAll(/\b(null|void|separated)\b/gi)].map((m) => m[1].toLowerCase()))];
+  const [preamble, ...sections] = doc.text.split(/^## /m);
+  const candidates = [
+    { heading: "preamble", body: preamble },
+    ...sections.map((section) => ({
+      heading: section.split("\n")[0].trim(),
+      body: section,
+    })),
+  ];
+  for (const { heading, body } of candidates) {
+    if (!body.trim() || !/\bn\s*=\s*1\b/.test(body)) continue;
+    const terms = [...new Set([...body.matchAll(/\b(null|void|separated)\b/gi)].map((m) => m[1].toLowerCase()))];
     if (terms.length > 0) {
-      const heading = section.split("\n")[0].trim();
       findings.push(
         finding(
           doc,

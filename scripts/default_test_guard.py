@@ -32,26 +32,36 @@ def scan_source(path, text, rules):
         tree = ast.parse(text)
     except SyntaxError:
         return findings
+    os_modules = {"os"}
+    os_functions = set()
+    calls = set()
+    for call in rules["pythonCalls"]:
+        module, name = call.split(".", 1)
+        calls.add(name)
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
                 root = alias.name.split(".")[0]
                 if root in rules["pythonModules"]:
                     _add(findings, path, node, f"default tests must not import {alias.name}")
+                if root == "os":
+                    os_modules.add(alias.asname or alias.name)
         elif isinstance(node, ast.ImportFrom):
             module = (node.module or "").split(".")[0]
             if module in rules["pythonModules"]:
                 _add(findings, path, node, f"default tests must not import {module}")
             if module == "os":
                 for alias in node.names:
-                    if f"os.{alias.name}" in rules["pythonCalls"]:
+                    if alias.name in calls:
+                        os_functions.add(alias.asname or alias.name)
                         _add(findings, path, node, f"default tests must not call os.{alias.name}")
         elif isinstance(node, ast.Call):
             func = node.func
             if isinstance(func, ast.Attribute) and isinstance(func.value, ast.Name):
-                name = f"{func.value.id}.{func.attr}"
-                if name in rules["pythonCalls"]:
-                    _add(findings, path, node, f"default tests must not call {name}")
+                if func.value.id in os_modules and func.attr in calls:
+                    _add(findings, path, node, f"default tests must not call {func.value.id}.{func.attr}")
+            elif isinstance(func, ast.Name) and func.id in os_functions:
+                _add(findings, path, node, f"default tests must not call {func.id}")
     return findings
 
 
