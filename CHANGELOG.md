@@ -21,3 +21,6 @@
 - Add the repository's first workflow: pull requests run both default suites and
   a strict site build, and `main` publishes to GitHub Pages, whose address is
   recorded in `README.md`.
+- Link the first prose use of each glossary term on the site from the single
+  glossary source, with tooltips, and review the aliases: two ordinary or
+  ambiguous ones removed.
