@@ -9,8 +9,6 @@ It carries definitions, not architectural obligations; see [Domain](https://gith
 
 ### Agent
 
-<!-- zensical-glossary-aliases: agent configuration -->
-
 An agent: the task-completing program, Pi plus its trace recorder, the optional worker extension and the remedies it loads, separate from the model it uses. Vanilla, Base, Easy, Medium and Hard are agents; they differ in worker state and enabled remedies, not in kind.
 
 ### Vanilla
@@ -52,7 +50,5 @@ One complete eval CLI invocation. It resolves the worker, Pi, suite and server b
 One agent attempt at one task within a job, covering its Pi session and subsequent grading. Its session may include a child-process chain that keeps one session ID; its record ends in a verdict or remains explicitly incomplete.
 
 ### Trajectory
-
-<!-- zensical-glossary-aliases: session record -->
 
 The recorder's session artifact: the ordered conversation and actions produced during one trial's Pi session.

@@ -62,3 +62,13 @@ media = "(prefers-color-scheme: dark)"
 scheme = "slate"
 toggle.icon = "lucide/moon"
 toggle.name = "Switch to system preference"
+
+# Glossary: definitions come from the single source at docs/glossary.md, and the
+# first prose occurrence of each term on a page links to the glossary page. The
+# base_url is written out rather than derived, because a wrong base path passes
+# locally and fails under the deployed prefix.
+[project.markdown_extensions.zensical_glossary]
+glossary_file = "glossary.md"
+heading_level = 3
+first_only = true
+base_url = "https://satyrn-ai.github.io/satyrn-pi/glossary/"
