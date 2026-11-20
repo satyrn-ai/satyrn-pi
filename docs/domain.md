@@ -85,7 +85,7 @@ without becoming the same architectural role.
 The Python package supplies measurement. Its CLI resolves and runs a job,
 prepares each workspace, starts Pi sessions, invokes the grader, and writes
 records. Suites and graders are package data rather than a checkout-local
-ladder.
+source tree.
 
 The planned runtime lives under `src/satyrn_pi/`. The CLI never imports the
 worker's TypeScript or reaches into its extension state. It invokes a resolved
@@ -135,7 +135,7 @@ session.
 
 ### Run and evidence architecture
 
-| Stage | Owner | Produces |
+| Step | Owner | Produces |
 | --- | --- | --- |
 | Resolve and prepare | Python CLI | Job configuration, workspace and prompt |
 | Execute | Pi, worker, recorder and remedies | Trajectory, worker report and finished workspace |
@@ -194,10 +194,10 @@ the trial as stopped rather than failed.
 Grading happens after the Pi session, outside it and outside the workspace. With
 the child processes gone, the eval package copies its own grader tests in and
 runs them. The worker cannot substitute a test or alter the grader copy.
-**Source evidence:** the pinned source's grading stage records `leaked.json`,
+**Source evidence:** the pinned source's grading step records `leaked.json`,
 `layout.json`, the contamination marker, `acceptance.json` and `stalled.json`
 before it produces a verdict. P6.1 owns whether the port keeps or revises those
-artifact names. The trial includes this grading stage even though its Pi session
+artifact names. The trial includes this grading step even though its Pi session
 has already ended.
 
 ### 5. Keep the evidence

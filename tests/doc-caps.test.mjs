@@ -24,6 +24,7 @@ test("BUDGET holds the agreed numbers", () => {
     status: 1000,
     backlogEntry: 1200,
     planFenced: 0.25,
+    glossary: 25,
   });
 });
 

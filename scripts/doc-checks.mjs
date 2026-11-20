@@ -7,6 +7,11 @@ import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { BUDGET } from "./doc-budgets.mjs";
+import {
+  checkGlossaryBudget,
+  checkRetiredTerms,
+  collectScope,
+} from "./vocabulary-checks.mjs";
 
 export { BUDGET };
 
@@ -234,6 +239,7 @@ export async function collectDocuments(root) {
     specs,
     plans,
     research: await walkMarkdown("docs/superpowers/research", root),
+    glossary: await readTopLevel("docs/glossary.md", root),
     agents: await readTopLevel("AGENTS.md", root),
     roadmap: await readTopLevel("ROADMAP.md", root),
     backlog: await readTopLevel("BACKLOG.md", root),
@@ -255,6 +261,8 @@ if (invokedDirectly) {
     ...(docs.backlog ? checkCaps({ ...docs.backlog, kind: "backlog" }) : []),
     ...docs.plans.flatMap(checkLifecycle),
     ...docs.research.flatMap(checkEvidenceWording),
+    ...(await collectScope(root)).flatMap(checkRetiredTerms),
+    ...(docs.glossary ? checkGlossaryBudget(docs.glossary.text) : []),
   ].flat();
   for (const item of findings) console.log(`${item.path}: ${item.rule}: ${item.message}`);
   if (findings.length > 0) process.exitCode = 1;

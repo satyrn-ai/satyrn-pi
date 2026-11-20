@@ -50,6 +50,15 @@ Contributor-process terms — reviewer brief, document budget, backlog entry,
 pathology — are defined where they are used, and are exempt from the
 close-checklist glossary step.
 
+Also on 2026-11-18 (P2.4), the retired-term check's scope is the product-facing
+documentation: `README.md`, `AGENTS.md`, `BACKLOG.md` and `docs/**`, excluding
+`docs/sdd.md`, this document, `docs/superpowers/**` and `docs/provenance/**`;
+root `BRIEF.md` and `ROADMAP.md` are excluded. This narrows the scope P1.2
+described, because contributor and source-mapping records legitimately discuss
+the retired names. Fenced code is skipped, plurals match, and exemptions are
+non-empty `<!-- vocabulary: reason -->` comments at the point of use; a heading
+is never exempt.
+
 ## Roadmap workflow
 
 Read [BRIEF.md](../BRIEF.md), this document and the preserved [SDD process](sdd.md)
