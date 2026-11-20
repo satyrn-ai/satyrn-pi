@@ -36,6 +36,20 @@ Runtime architecture follows BRIEF.md: the thin worker bundles no prompt,
 guard, project facts or tool narrowing. Preserving prompt text does not make
 it an active remedy or exempt a future fragment from the agnosticism rule.
 
+## Document budgets and vocabulary scope (2026-11-18)
+
+On 2026-11-18 the port tightened the preserved document caps for new work: a
+spec is at most 150 lines with a reviewer brief of at most 30 lines, and a plan
+is at most 250 lines. `docs/sdd.md` stays byte-for-byte and keeps the original
+400-line numbers; the root `AGENTS.md` is the effective index and carries the
+new numbers. This is the dated reversal record, kept beside the mapping rather
+than edited into the preserved original.
+
+The product glossary in `docs/glossary.md` covers product vocabulary only.
+Contributor-process terms — reviewer brief, document budget, backlog entry,
+pathology — are defined where they are used, and are exempt from the
+close-checklist glossary step.
+
 ## Roadmap workflow
 
 Read [BRIEF.md](../BRIEF.md), this document and the preserved [SDD process](sdd.md)

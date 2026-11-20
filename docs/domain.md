@@ -287,12 +287,12 @@ destinations are named without links until those documents exist.
 | Intent | Canonical destination | Availability |
 | --- | --- | --- |
 | Understand concepts and ownership | `docs/domain.md` | Current in P1.2 |
-| Contribute through repository workflows | Root `AGENTS.md` and contributor guidance | Planned in P2.1 |
+| Contribute through repository workflows | Root `AGENTS.md` and contributor guidance | Current in P2.2 |
 | Run an eval | Eval CLI guide | Planned in P5.1 |
 | Write a suite, task or grader | Eval authoring guide | Planned in P6.1 |
 | Interpret scores and evidence | Scoring and evidence guide | Planned in P6.1 |
 
-The P2.1 contributor setup links this domain document from `AGENTS.md`, making it
+The P2.2 rules index (`AGENTS.md`) links this domain document, making it
 reachable from an agent's normal entry point. The P5.1 operational guide owns
 copyable commands, prerequisites, outputs and failure behavior. The P6.1 guides
 own suite and grader authoring contracts and score interpretation.
