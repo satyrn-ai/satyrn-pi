@@ -43,8 +43,10 @@ split the cycle or link evidence, not delete reasoning.
 
 Run `npm test` and `uv run pytest`. Both stay model-, network- and
 subprocess-free. Run `npm run check:docs` for cap, lifecycle, evidence and
-vocabulary findings; the same checks run in the default suite. Every new test
-is shown to fail before the code that passes it.
+vocabulary findings; the same checks run in the default suite. The
+default-test tripwire and one-way import check run in `npm test`, with the
+Python side of the tripwire in `pytest`. Every new test is shown to fail before
+the code that passes it.
 
 ## Boundaries
 
