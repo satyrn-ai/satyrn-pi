@@ -12,6 +12,7 @@ export const IGNORED_DIRECTORIES = new Set([
   ".venv",
   "runs",
   "dist",
+  "site",
   "__pycache__",
   ".pytest_cache",
   ".idea",

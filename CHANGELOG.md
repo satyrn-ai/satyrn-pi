@@ -15,3 +15,6 @@
 - Split phase 2 into six stacked cycles, P2.1 to P2.6, in the roadmap.
 - Add the root rules index, a routing skill, and the backlog and pathology
   records, with document budgets tightening the preserved caps for new work.
+- Add the documentation site's identity: a Zensical configuration, the Satyrn
+  stylesheet and display face adopted from `satyrn-website` at `7508bd7`, and a
+  home page, publishing only the home page and the glossary.

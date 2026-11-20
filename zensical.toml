@@ -1,0 +1,64 @@
+[project]
+site_name = "Satyrn Pi"
+site_url = "https://satyrn-ai.github.io/satyrn-pi/"
+site_description = "A small local model as a bounded coding worker inside Pi."
+site_author = "Satyrn AI Contributors"
+copyright = "&copy; 2026 Satyrn AI"
+
+docs_dir = "docs"
+site_dir = "site"
+extra_css = ["stylesheets/satyrn.css"]
+strict = true
+
+# Only the home page and the glossary are published. Zensical builds whatever
+# sits in docs_dir unless it is excluded here, and a strict build does not warn
+# about an extra page, so tests/published-pages.test.mjs re-derives this list and
+# fails when the two disagree.
+exclude_docs = """
+domain.md
+pathologies.md
+rules-applicability.md
+sdd.md
+provenance/
+superpowers/
+"""
+
+nav = [
+  { "Home" = ["index.md"] },
+  { "Glossary" = ["glossary.md"] },
+]
+
+[project.theme]
+language = "en"
+# No Google Fonts: the site makes no external font request. Headings use the
+# self-hosted display face from satyrn.css; body copy and code use the theme's
+# own stack. See docs/superpowers/specs/2026-11-19-p3.1-site-identity-design.md.
+font = false
+features = [
+  "content.code.copy",
+  "content.tooltips",
+  "navigation.footer",
+  "navigation.instant",
+  "navigation.path",
+  "navigation.sections",
+  "navigation.top",
+  "navigation.tracking",
+  "search.highlight",
+]
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme)"
+toggle.icon = "lucide/sun-moon"
+toggle.name = "Switch to light mode"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
+scheme = "default"
+toggle.icon = "lucide/sun"
+toggle.name = "Switch to dark mode"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
+scheme = "slate"
+toggle.icon = "lucide/moon"
+toggle.name = "Switch to system preference"

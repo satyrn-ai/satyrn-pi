@@ -3,7 +3,7 @@
 Use Vanilla → Base → Easy → Medium → Hard directly. Each names an agent; Easy, Medium and Hard also name an eval suite and a preset, so say which you mean.
 This dictionary defines the project's shared vocabulary in short, reusable entries.
 Use it to check a term while reading; aliases support automatic site links.
-It carries definitions, not architectural obligations; see [Domain](domain.md) for responsibilities and where things live.
+It carries definitions, not architectural obligations; see [Domain](https://github.com/satyrn-ai/satyrn-pi/blob/main/docs/domain.md) for responsibilities and where things live.
 
 **Vocabulary budget:** 25 defined terms, counted as the `###` entries in this file. Aliases do not add a term.
 
