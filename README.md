@@ -37,6 +37,7 @@ The default suites use no model, network or subprocess:
 
 ```sh
 npm test
+npm run check:docs
 uv run pytest
 ```
 
