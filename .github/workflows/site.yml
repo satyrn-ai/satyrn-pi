@@ -1,0 +1,85 @@
+name: Site
+
+# The repository's first workflow, and its only one: it gates pull requests on
+# the default suites and a strict site build, then publishes `main` to GitHub
+# Pages. Pull requests never deploy.
+#
+# Action versions follow the recipe in Zensical's publishing documentation,
+# which is what the site acceptance rules point at. Pinning them here rather
+# than tracking a branch keeps a workflow from changing under the repository.
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Default suites and strict build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          # The floor `package.json` declares. A workflow that quietly upgraded
+          # it would test something the repository does not claim to support.
+          node-version: 22.19.0
+          cache: npm
+
+      - name: Install JavaScript dependencies
+        run: npm ci
+
+      - name: uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      # The lock file is the repository's declared input, so CI installs from it
+      # rather than resolving anything fresh.
+      - name: Install Python dependencies
+        run: uv sync --locked
+
+      # Both default suites stay model-, network- and subprocess-free on a
+      # developer's machine; running them here is what enforces the gates that
+      # P2.3 to P2.5 re-earned.
+      - name: Default JavaScript suite
+        run: npm test
+
+      - name: Default Python suite
+        run: uv run pytest
+
+      # Strict on the command line as well as in zensical.toml, so the
+      # workflow's contract is readable in one place. --clean means a deleted
+      # page cannot survive in `site/`.
+      - name: Strict site build
+        run: uv run zensical build --strict --clean
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+
+  deploy:
+    name: Publish to Pages
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v5
