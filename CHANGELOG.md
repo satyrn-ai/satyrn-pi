@@ -9,3 +9,7 @@
 - Add model-free default test suites: `npm test` and `uv run pytest`.
 - Ignore `runs/`, and add the repository-weight check with its fail path
   exercised on a fixture tree.
+- Add the contributor README and `npm run setup`, which runs the locked
+  dependency installs and pins Superpowers for contributor Pi at
+  `bb92a77` (`v7.0.0`).
+- Split phase 2 into six stacked cycles, P2.1 to P2.6, in the roadmap.
