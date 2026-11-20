@@ -6,6 +6,11 @@ A small local model as a bounded coding worker inside Pi.
 worker, remedies, eval CLI, suites and grading are not implemented yet; see
 [ROADMAP.md](ROADMAP.md).
 
+**Site:** <https://satyrn-ai.github.io/satyrn-pi/> carries the home page and the
+glossary. It is built from `docs/index.md` and `docs/glossary.md` by the workflow
+in `.github/workflows/site.yml`; every other document in `docs/` is contributor
+material and is not published.
+
 ## Prerequisites
 
 - Node.js 22.19 or newer

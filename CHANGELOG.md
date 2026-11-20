@@ -18,3 +18,6 @@
 - Add the documentation site's identity: a Zensical configuration, the Satyrn
   stylesheet and display face adopted from `satyrn-website` at `7508bd7`, and a
   home page, publishing only the home page and the glossary.
+- Add the repository's first workflow: pull requests run both default suites and
+  a strict site build, and `main` publishes to GitHub Pages, whose address is
+  recorded in `README.md`.
