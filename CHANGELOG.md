@@ -24,3 +24,6 @@
 - Link the first prose use of each glossary term on the site from the single
   glossary source, with tooltips, and review the aliases: two ordinary or
   ambiguous ones removed.
+- Split phase 4 into three stacked cycles, P4.1 to P4.3, after the phase's
+  brainstorm: a pinned reference host card, a recorded setup walk, and the
+  published Getting Started page.
