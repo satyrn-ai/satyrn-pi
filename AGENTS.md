@@ -22,10 +22,12 @@ the applicability mappings govern. Explicit user instructions come first.
 ## The cycle
 
 Every cycle runs brainstorm → spec → plan → execute → review/close, sized to the
-change. Get human approval before implementation; Nicola approves pull requests.
-Plans carry front matter (`phase`, `feature_cycle`, `cycle`, `lifecycle`) and a
-`## Result` only at close. A phase is a container; each cycle ships one bounded
-deliverable or explicitly named infrastructure.
+change. Get human approval before implementation. Nicola leads review: assign
+every pull request to him and mention Andre and Ben in it for their lanes. He
+has authorised Paul to approve once a pull request is filed (2026-11-21); the
+assignee stays Nicola. Plans carry front matter (`phase`, `feature_cycle`,
+`cycle`, `lifecycle`) and a `## Result` only at close. A phase is a container;
+each cycle ships one bounded deliverable or explicitly named infrastructure.
 
 ## Document budgets
 

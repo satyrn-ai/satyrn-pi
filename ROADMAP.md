@@ -4,9 +4,9 @@ Scope: [BRIEF](BRIEF.md). Process: [Superpowers/SDD and roadmap rules](docs/rule
 
 ## Now
 
-In flight: nothing. Phase 3 merged to `main` on 2026-11-20 as PRs #13–#16 and the site is live; those four were merged on Nicola's chat approval, self-approved, and carry no GitHub review record.
+In flight: [P4.0](#phase-4--getting-started-setup-llamacpp), the phase-4 split, alone in its stack; the three cycles below are proposals until each opens.
 Parked: preset choices and rented-host qualification await their [research owners](BRIEF.md#decisions-the-research-documents-own).
-Next: [P4.1](#phase-4--getting-started-setup-llamacpp), Getting Started's llama.cpp setup, after its own brainstorm.
+Next: [P4.1](#phase-4--getting-started-setup-llamacpp), the reference host card, as the base of the phase-4 stack.
 
 Rows are initial proposals. Brainstorm each phase during the port and split or
 add cycles before implementation; one row does not limit a phase to one cycle.
@@ -44,9 +44,16 @@ presets select remedies.
 
 ## Phase 4 — Getting Started setup: llama.cpp
 
+The phase's shared calls — who the page serves, what it promises, the platform,
+and which build and weights are the subject — are settled in the
+[P4.0 spec](docs/superpowers/specs/2026-11-21-p4.0-getting-started-design.md).
+Each row below carries its own plan when it opens.
+
 | Cycle | Ships | Excludes | Status |
 | --- | --- | --- | --- |
-| **P4.1** | Getting Started setup for the Q4_K_M subject on llama-server b12066 at `127.0.0.1:8001`; record the actual GGUF digest, platform artifact and serve flags, and demonstrate a response on the documented reference platform. See [rig](docs/superpowers/research/2026-11-16-reference-rig.md). | Eval-managed server lifecycle; pod provisioning; implying other hosts or historical runs used this exact build. | proposed — after P3.1; document other platforms as unverified until exercised. |
+| **P4.1** | The reference host card: llama.cpp b12066's source commit and the official `llama-b12066-bin-macos-arm64.tar.gz` asset digest, the Q4_K_M GGUF's Hugging Face revision, size and sha256, the preserved settings, and the whole serve command, each quoted with the metadata it came from. Darwin arm64 is the documented reference platform; every other platform is published as unverified. | Fetching an artifact; a running server; any site change; a second quant or build. | proposed — the base of the phase-4 stack; opens once P4.0 merges. |
+| **P4.2** | b12066 installed beside Homebrew's 12110 from that asset, the weights fetched and verified against the card, a served model at `127.0.0.1:8001`, a demonstrated answer, the walk through the page's steps from a directory with neither build nor weights, and the startup allocation with the observed footprint. | Publishing; prose; an eval-managed server lifecycle; a machine nobody here has touched. | proposed — stacked on P4.1. |
+| **P4.3** | Getting Started at `docs/getting-started.md`: numbered steps rendered from P4.2's walk, the digests and build tag, the two macOS failures named, a nav section, the site's third published page with its published-set test updated deliberately, and a check that the page's digests still match the card. | Phase 9's walkthrough sections; setup for unverified platforms; a fourth page. | proposed — stacked on P4.2; Ben reviews the prose. |
 
 ## Phase 5 — Eval CLI
 
