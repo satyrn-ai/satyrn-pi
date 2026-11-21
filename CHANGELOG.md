@@ -32,3 +32,7 @@
   authorised Paul to approve. GitHub refuses self-approval, so a request Paul
   wrote merges on Nicola's approval with the authorisation recorded in a
   comment.
+- Pin the reference host card: llama.cpp b12066 by source commit and whole-release
+  asset digest, the Q4_K_M weights by Hugging Face revision, size and sha256, the
+  preserved settings, and the serve command with `-hf` replaced by an explicit
+  `-m` path so a repository selector cannot stand in for the pinned file.
