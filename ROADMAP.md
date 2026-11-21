@@ -4,9 +4,9 @@ Scope: [BRIEF](BRIEF.md). Process: [Superpowers/SDD and roadmap rules](docs/rule
 
 ## Now
 
-In flight: [P4.0](#phase-4--getting-started-setup-llamacpp), the phase-4 split, awaiting [Nicola's review](https://github.com/satyrn-ai/satyrn-pi/pull/18); [P4.1](#phase-4--getting-started-setup-llamacpp) is stacked on it.
+In flight: [P4.1](#phase-4--getting-started-setup-llamacpp), the reference host card, in [PR #19](https://github.com/satyrn-ai/satyrn-pi/pull/19); [P4.2](#phase-4--getting-started-setup-llamacpp) is stacked on it. The phase-4 split merged as PR #18 on 2026-11-21.
 Parked: preset choices and rented-host qualification await their [research owners](BRIEF.md#decisions-the-research-documents-own).
-Next: [P4.1](#phase-4--getting-started-setup-llamacpp), the reference host card, as the base of the phase-4 stack.
+Next: [P4.2](#phase-4--getting-started-setup-llamacpp), reproducing the pinned configuration, once its branch is reviewed.
 
 Rows are initial proposals. Brainstorm each phase during the port and split or
 add cycles before implementation; one row does not limit a phase to one cycle.
