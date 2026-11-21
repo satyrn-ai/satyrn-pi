@@ -27,3 +27,6 @@
 - Split phase 4 into three stacked cycles, P4.1 to P4.3, after the phase's
   brainstorm: a pinned reference host card, a recorded setup walk, and the
   published Getting Started page.
+- Record the review order for pull requests: Nicola leads and is assigned,
+  every request mentions Andre and Ben for their lanes, and Nicola has
+  authorised Paul to approve once a request is filed.
