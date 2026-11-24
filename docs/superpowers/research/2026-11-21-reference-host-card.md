@@ -71,6 +71,22 @@ curl -sS "https://huggingface.co/api/models/JetBrains/Mellum2.1-12B-A2.5B-Thinki
          "\(.size) \(.lfs.oid)"'
 ```
 
+## What the source held, and what this card holds instead
+
+The source's llama path is looser than this card. `scripts/baseline/pins.env` at
+`0e4a9b68` pins the image by a bare tag, `vastai/llama-cpp:b11985-mix-c116c32-cuda-12.9`
+(line 23), and the GGUF by repository and quant alone (lines 24–25): no revision,
+no hash. The only `@sha256` in that file belongs to the vLLM image (line 19), which
+is a different serving stack — so the container-digest shape was vLLM's, and it was
+never the llama batch's to mirror.
+
+That turns these five values from a shape copied into a gap closed: the card pins
+the file the source's selector left loose. A rented llama host, when one is
+qualified, takes this shape and adds an `@sha256` image digest — tighter than the
+bare tag the source settled for.
+
+*(Andre, 2026-11-22, reviewing this card.)*
+
 ## The settings
 
 Quoted from the source at `0e4a9b68`, not newly measured:
