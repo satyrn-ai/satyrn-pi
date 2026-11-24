@@ -324,4 +324,5 @@ def test_a_preparation_failure_leaves_the_trial_record_and_no_summary(tmp_path: 
     job = next(runs.glob("*-basic/*"))
     assert (job / "job.json").is_file()
     assert not (job / "run.json").exists()
-    assert json.loads((job / "trial-01" / "trial.json").read_text())["status"] == "prepared"
+    record = json.loads((job / "trial-01" / "trial.json").read_text())
+    assert record["status"] == "prepared"

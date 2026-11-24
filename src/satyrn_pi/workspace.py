@@ -64,8 +64,13 @@ def prepare(task: Mapping[str, str], suite_root: Path, trial: Path) -> Path:
     overlay = fixture / "overlay"
     if overlay.is_dir():
         _copy_tree(overlay, destination)
+    root = destination.resolve()
     for victim in _deletions(fixture):
-        target = destination / victim
+        target = (destination / victim).resolve()
+        if target == root or root not in target.parents:
+            raise WorkspaceError(
+                f"task {identifier} deletes {victim!r}, which is outside its workspace"
+            )
         if target.is_file():
             target.unlink()
 
