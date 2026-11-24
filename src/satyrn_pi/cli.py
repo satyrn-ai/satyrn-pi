@@ -24,6 +24,8 @@ from .records import (
     write_run,
 )
 from .resolve import ResolutionError, resolve_pi, resolve_suite, resolve_worker
+from .trial import write_trial
+from .workspace import WorkspaceError, prepare
 
 CLI_VERSION = __version__
 DEFAULT_BASE_URL = "http://127.0.0.1:8001/v1"
@@ -125,11 +127,32 @@ def main(argv: Sequence[str], *, probes, runs_root: Path, cwd: Path) -> int:
         },
     )
 
+    prepared = 0
+    for index, task in enumerate(suite.tasks, start=1):
+        trial = path / f"trial-{index:02d}"
+        write_trial(
+            trial,
+            {
+                "task": task["id"],
+                "status": "prepared",
+                "model": DEFAULT_MODEL,
+                "worker": str(worker.path),
+                "worker_version": worker.version,
+                "pi_version": pi.version,
+            },
+        )
+        try:
+            prepare(task, suite_root / f"suite-{suite.name}", trial)
+        except WorkspaceError as error:
+            return _fail(str(error))
+        prepared += 1
+
     elapsed = round(probes.monotonic() - started, 3)
     write_run(
         path,
         {
-            "status": "resolved",
+            "status": "prepared",
+            "trials": prepared,
             "model_requests": aggregate_requests(trials),
             "elapsed_seconds": elapsed,
             "counts_source": "fixtures",
