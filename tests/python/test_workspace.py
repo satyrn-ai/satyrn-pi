@@ -65,3 +65,30 @@ def test_preparing_twice_does_not_leave_the_first_attempt_behind(tmp_path: Path)
     stale.write_text("stale\n")
     prepare(task("task-01"), SUITE, trial)
     assert not stale.exists()
+
+
+def test_a_deletion_cannot_escape_the_workspace(tmp_path: Path) -> None:
+    sentinel = tmp_path / "outside.py"
+    sentinel.write_text("must survive\n")
+    fixture = tmp_path / "fixtures" / "escape"
+    (fixture / "base").mkdir(parents=True)
+    (fixture / "base" / "keep.py").write_text("keep\n")
+    (fixture / "deletions.txt").write_text("../outside.py\n")
+    with pytest.raises(WorkspaceError) as raised:
+        prepare({"id": "escape", "fixture": "fixtures/escape", "instructions": "x"},
+                tmp_path, tmp_path / "trial-01")
+    assert "outside" in str(raised.value) or "escape" in str(raised.value)
+    assert sentinel.read_text() == "must survive\n"
+
+
+def test_an_absolute_deletion_is_refused(tmp_path: Path) -> None:
+    sentinel = tmp_path / "absolute-outside.py"
+    sentinel.write_text("must survive\n")
+    fixture = tmp_path / "fixtures" / "absolute"
+    (fixture / "base").mkdir(parents=True)
+    (fixture / "base" / "keep.py").write_text("keep\n")
+    (fixture / "deletions.txt").write_text(f"{sentinel}\n")
+    with pytest.raises(WorkspaceError):
+        prepare({"id": "absolute", "fixture": "fixtures/absolute", "instructions": "x"},
+                tmp_path, tmp_path / "trial-02")
+    assert sentinel.read_text() == "must survive\n"

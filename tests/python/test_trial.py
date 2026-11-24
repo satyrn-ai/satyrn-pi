@@ -53,3 +53,18 @@ def test_a_trial_left_at_prepared_is_a_status_not_a_failure(tmp_path: Path) -> N
     written = json.loads((tmp_path / "trial.json").read_text())
     assert written["status"] != "failed"
     assert "failed" not in STATUSES
+
+
+@pytest.mark.parametrize("status", ("prepared", "running", "session-ended"))
+def test_a_non_final_trial_refuses_a_verdict_or_a_score(tmp_path: Path, status: str) -> None:
+    with pytest.raises(ValueError):
+        write_trial(tmp_path, {"task": "task-01", "status": status, "verdict": "pass"})
+    with pytest.raises(ValueError):
+        write_trial(tmp_path, {"task": "task-01", "status": status, "score": 1.0})
+    assert not (tmp_path / "trial.json").exists()
+
+
+def test_a_verdict_left_over_from_a_final_record_is_refused(tmp_path: Path) -> None:
+    write_trial(tmp_path, {"task": "task-01", "status": "graded", "verdict": "pass", "score": 1.0})
+    with pytest.raises(ValueError):
+        write_trial(tmp_path, {"status": "prepared"})

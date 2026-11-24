@@ -84,11 +84,15 @@ closed set — `prepared`, `running`, `session-ended`, `graded`, `stopped` — a
 
 | Code | Meaning |
 | --- | --- |
-| 0 | Resolved, recorded. |
-| 2 | Stopped. Nothing was written, and the reason is on stderr. |
+| 0 | Resolved, prepared, recorded. |
+| 2 | Stopped, with the reason on stderr. |
 
-A stop includes: no worker and no installed package, an ambiguous worker, a Pi
-outside the declared peer range, an unknown suite, or no server answering.
+A stop before the job directory exists writes nothing at all: no worker and no
+installed package, an ambiguous worker, a Pi outside the declared peer range, an
+unknown suite, or no server answering. A stop **after** it — a fixture that cannot
+be prepared — leaves `job.json` and the trials already written, and no `run.json`.
+That is deliberate: a partial record stays inspectable, and a directory without
+`run.json` is a job that stopped rather than one that succeeded.
 
 ## What a prepared run does not prove
 
@@ -101,5 +105,5 @@ Grading and verdicts arrive in P6.1.
 The health check proves **something** answers on the base URL, not which build or
 model answered. On a machine where another inference server holds port 8001 — one
 that may serve a different Mellum under the same name — a run can be green against
-the wrong server. P5.2 records the model and the session; until then, read the
+the wrong server. P5.3 records the session; until then, read the
 server's own startup log, which names the build and the model file it loaded.
