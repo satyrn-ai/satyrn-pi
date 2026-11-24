@@ -22,12 +22,14 @@ the applicability mappings govern. Explicit user instructions come first.
 ## The cycle
 
 Every cycle runs brainstorm → spec → plan → execute → review/close, sized to the
-change. Get human approval before implementation. Nicola leads review: assign
-every pull request to him and mention Andre and Ben in it for their lanes. He
-has authorised Paul to approve requests Paul did not author (2026-11-21); GitHub
-refuses an author's own approval, so a request Paul wrote carries a comment
-recording that authorisation and merges on Nicola's approval. The assignee stays
-Nicola. Plans carry front matter (`phase`, `feature_cycle`, `cycle`, `lifecycle`)
+change. Get human approval before implementation. Nicola leads review: assign him
+every pull request, mention Andre and Ben for their lanes, keep him the assignee.
+Code or the reference configuration merges on his approval; documentation on its
+own merges on a green required check plus Paul's authorisation in the request
+(2026-11-21) — GitHub refuses an author's own approval, so that is a comment.
+`main` requires a pull request and `Default suites and strict build`, and no
+required approval: the check guards the branch, review guards the decisions.
+Plans carry front matter (`phase`, `feature_cycle`, `cycle`, `lifecycle`)
 and a `## Result` only at close. A phase is a container; each cycle ships one
 bounded deliverable or explicitly named infrastructure.
 
