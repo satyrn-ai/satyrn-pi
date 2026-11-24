@@ -15,7 +15,10 @@ material and is not published.
 
 - Node.js 22.19 or newer
 - [uv](https://docs.astral.sh/uv/)
-- Pi within this package's peer range `^1.1.0` (the port targets 1.5.2)
+- Pi within this package's peer range `^1.1.0`. The port targets **1.5.2**, and
+  that is the version development and verification use; `latest` has already moved
+  past it, so an installed version inside the range is not evidence of a verified
+  one
 
 ## Set up
 
