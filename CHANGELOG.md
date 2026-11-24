@@ -52,3 +52,5 @@
   the ruleset now requires a pull request and the default-suite check, so the
   condition it named is met and the format says to delete rather than archive.
   Reopen the accessibility-statement entry, whose condition this page meets.
+- Split phase 5 into two stacked cycles, P5.1 to P5.2: resolution and records
+  proved with fixtures, then the Pi child with its workspace and deadline.
