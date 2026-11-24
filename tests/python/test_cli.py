@@ -235,3 +235,53 @@ def test_the_pinned_alias_lets_the_run_through(tmp_path: Path) -> None:
     probes = Probes(server_models=lambda _: (cli.DEFAULT_MODEL,))
     code, _, _ = run(tmp_path, "--suite", "basic", probes=probes)
     assert code == 0
+
+
+def test_each_task_gets_a_prepared_trial_with_a_workspace(tmp_path: Path) -> None:
+    code, _, runs = run(tmp_path, "--suite", "basic")
+    assert code == 0
+    job = only_job(runs)
+    trials = sorted(path for path in job.glob("trial-*"))
+    assert [trial.name for trial in trials] == ["trial-01", "trial-02", "trial-03"]
+    for trial in trials:
+        record = json.loads((trial / "trial.json").read_text())
+        assert record["status"] == "prepared"
+        assert record["task"].startswith("task-")
+        assert (trial / "prompt.txt").is_file()
+        assert (trial / "workspace").is_dir()
+        assert not (trial / "verdict.json").exists()
+
+
+def test_the_run_says_it_only_prepared(tmp_path: Path) -> None:
+    code, _, runs = run(tmp_path, "--suite", "basic")
+    summary = json.loads((only_job(runs) / "run.json").read_text())
+    assert summary["status"] == "prepared"
+    assert summary["trials"] == 3
+
+
+def test_each_trial_records_the_pinned_model(tmp_path: Path) -> None:
+    code, _, runs = run(tmp_path, "--suite", "basic")
+    assert code == 0
+    job = only_job(runs)
+    job_record = json.loads((job / "job.json").read_text())
+    for trial in sorted(job.glob("trial-*")):
+        record = json.loads((trial / "trial.json").read_text())
+        assert record["model"] == job_record["model"]
+
+
+def test_a_preparation_failure_leaves_the_trial_record_and_no_summary(tmp_path: Path) -> None:
+    probes = Probes()
+    probes.suite_root = tmp_path / "suites"
+    (probes.suite_root / "suite-basic").mkdir(parents=True)
+    (probes.suite_root / "suite-basic" / "suite.json").write_text(
+        json.dumps({"name": "basic", "version": "0.0.1", "tasks": [
+            {"id": "task-x", "instructions": "x", "fixture": "fixtures/task-x",
+             "verification": "y"}]})
+    )
+    (probes.suite_root / "trials").mkdir()
+    code, _, runs = run(tmp_path, "--suite", "basic", probes=probes)
+    assert code == 2
+    job = next(runs.glob("*-basic/*"))
+    assert (job / "job.json").is_file()
+    assert not (job / "run.json").exists()
+    assert json.loads((job / "trial-01" / "trial.json").read_text())["status"] == "prepared"

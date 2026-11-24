@@ -4,9 +4,10 @@
 one of them is wrong or ambiguous, and writes a record of what it resolved before
 anything is asked of a model.
 
-**Availability:** P5.1 ships resolution and records. It starts no Pi session, runs
-no task and produces no verdict. P5.2 adds the session; P6.1 adds suites and
-grading. Until then a run proves the record, not a measurement.
+**Availability:** P5.1 ships resolution and records. P5.2 prepares each trial's
+workspace and records it as `prepared`. No Pi session starts, no task runs, and no
+verdict exists. P5.3 adds the session, P5.4 the deadline, P6.1 suites and grading.
+Until then a run proves the record, not a measurement.
 
 ## Before you start
 
@@ -57,6 +58,20 @@ version and whether it is the verified target, the model and the base URL.
 `run.json` is written last and carries the status, the counts and the exit status.
 A directory with `job.json` but no `run.json` is a job that stopped.
 
+Each task also gets a trial directory:
+
+```text
+trial-01/
+  trial.json     status, task, worker and Pi provenance — replaced at each boundary
+  prompt.txt     what the agent will be asked
+  workspace/     the task's base files, with its variant overlay and deletions applied
+```
+
+`trial.json` is written **before** anything runs, so a trial that never got
+further says `prepared` rather than looking like a result. The statuses are a
+closed set — `prepared`, `running`, `session-ended`, `graded`, `stopped` — and
+`write_trial` refuses anything else. Only `graded` and `stopped` are final.
+
 ## Counting
 
 - **Model requests** is the sum over trials. In P5.1 the trials are fixtures, so
@@ -74,6 +89,12 @@ A directory with `job.json` but no `run.json` is a job that stopped.
 
 A stop includes: no worker and no installed package, an ambiguous worker, a Pi
 outside the declared peer range, an unknown suite, or no server answering.
+
+## What a prepared run does not prove
+
+A workspace on disk is not work done. Nothing has read the prompt or touched the
+files, `trial.json` says `prepared`, and `run.json` says `prepared` for the job.
+Grading and verdicts arrive in P6.1.
 
 ## What a passing run does not prove
 
