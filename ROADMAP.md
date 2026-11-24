@@ -4,9 +4,9 @@ Scope: [BRIEF](BRIEF.md). Process: [Superpowers/SDD and roadmap rules](docs/rule
 
 ## Now
 
-In flight: [P4.1](#phase-4--getting-started-setup-llamacpp), the reference host card, in [PR #19](https://github.com/satyrn-ai/satyrn-pi/pull/19); [P4.2](#phase-4--getting-started-setup-llamacpp) is stacked on it. The phase-4 split merged as PR #18 on 2026-11-21.
+In flight: [P4.2](#phase-4--getting-started-setup-llamacpp), the recorded walk, in [PR #20](https://github.com/satyrn-ai/satyrn-pi/pull/20); [P4.3](#phase-4--getting-started-setup-llamacpp) is stacked on it. The split merged as #18 and the host card as #19.
 Parked: preset choices and rented-host qualification await their [research owners](BRIEF.md#decisions-the-research-documents-own).
-Next: [P4.2](#phase-4--getting-started-setup-llamacpp), reproducing the pinned configuration, once its branch is reviewed.
+Next: [P4.3](#phase-4--getting-started-setup-llamacpp), publishing Getting Started, once its branch is reviewed.
 
 Rows are initial proposals. Brainstorm each phase during the port and split or
 add cycles before implementation; one row does not limit a phase to one cycle.
@@ -51,7 +51,7 @@ Each row below carries its own plan when it opens.
 
 | Cycle | Ships | Excludes | Status |
 | --- | --- | --- | --- |
-| **P4.1** | The reference host card: llama.cpp b12066's source commit and the official `llama-b12066-bin-macos-arm64.tar.gz` asset digest, the Q4_K_M GGUF's Hugging Face revision, size and sha256, the preserved settings, and the whole serve command, each quoted with the metadata it came from. Darwin arm64 is the documented reference platform; every other platform is published as unverified. | Fetching an artifact; a running server; any site change; a second quant or build. | in flight — stacked on P4.0. The card is [recorded](docs/superpowers/research/2026-11-21-reference-host-card.md); [plan](docs/superpowers/plans/2026-11-21-p4.1-reference-host-card.md). |
+| **P4.1** | The reference host card: llama.cpp b12066's source commit and the official `llama-b12066-bin-macos-arm64.tar.gz` asset digest, the Q4_K_M GGUF's Hugging Face revision, size and sha256, the preserved settings, and the whole serve command, each quoted with the metadata it came from. Darwin arm64 is the documented reference platform; every other platform is published as unverified. | Fetching an artifact; a running server; any site change; a second quant or build. | closed 2026-11-24 — merged as PR #19. The card pins b12066 by commit and asset digest and Q4_K_M by revision and sha256; Andre's review corrected the premise that a container digest was ever the llama batch's. [Card](docs/superpowers/research/2026-11-21-reference-host-card.md). |
 | **P4.2** | b12066 installed beside Homebrew's 12110 from that asset, the weights fetched and verified against the card, a served model at `127.0.0.1:8001`, a demonstrated answer, the walk through the page's steps from a directory with neither build nor weights, and the startup allocation with the observed footprint. | Publishing; prose; an eval-managed server lifecycle; a machine nobody here has touched. | proposed — stacked on P4.1. |
 | **P4.3** | Getting Started at `docs/getting-started.md`: numbered steps rendered from P4.2's walk, the digests and build tag, the two macOS failures named, a nav section, the site's third published page with its published-set test updated deliberately, and a check that the page's digests still match the card. | Phase 9's walkthrough sections; setup for unverified platforms; a fourth page. | proposed — stacked on P4.2; Ben reviews the prose. |
 
