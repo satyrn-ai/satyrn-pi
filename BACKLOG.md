@@ -25,12 +25,6 @@ kept. An empty backlog is valid — do not invent entries to fill this file.
 - **Reopen when:** the site has more than the home page and the glossary, or a
   reader or reviewer asks for a statement.
 - **Links:** [P3.1 spec](docs/superpowers/specs/2026-11-19-p3.1-site-identity-design.md)
-
-### Require the site check on `main`
-
-- **Area:** repository settings
-- **Deferred:** `main` has no branch protection, so the `Site` workflow reports
-  on a pull request but nothing requires it, and nothing stops a direct push.
-- **Reopen when:** the team wants a failing build to block a merge, or a second
-  contributor starts opening pull requests.
-- **Links:** [P3.2 spec](docs/superpowers/specs/2026-11-19-p3.2-deploy-design.md)
+- **Reopened 2026-11-24:** Getting Started makes the site three pages, which is
+  the condition above. The statement is unclaimed work rather than backlog, and it
+  belongs to whoever next touches the site's chrome.
