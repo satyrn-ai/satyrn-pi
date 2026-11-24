@@ -27,11 +27,14 @@
 - Split phase 4 into three stacked cycles, P4.1 to P4.3, after the phase's
   brainstorm: a pinned reference host card, a recorded setup walk, and the
   published Getting Started page.
-- Record the review order for pull requests: Nicola leads and is assigned,
-  every request mentions Andre and Ben for their lanes, and Nicola has
-  authorised Paul to approve. GitHub refuses self-approval, so a request Paul
-  wrote merges on Nicola's approval with the authorisation recorded in a
-  comment.
+- Record the review order for pull requests: Nicola leads and is assigned, every
+  request mentions Andre and Ben for their lanes, code and the reference
+  configuration merge on his approval, and documentation on its own merges on a
+  green required check plus Paul's recorded authorisation. GitHub refuses
+  self-approval, so that authorisation is a comment rather than a review.
+- Enable the default-branch ruleset: `main` now requires a pull request and the
+  `Default suites and strict build` check, with no required approval, so the
+  check guards the branch while review guards the decisions.
 - Pin the reference host card: llama.cpp b12066 by source commit and whole-release
   asset digest, the Q4_K_M weights by Hugging Face revision, size and sha256, the
   preserved settings, and the serve command with `-hf` replaced by an explicit
