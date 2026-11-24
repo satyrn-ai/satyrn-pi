@@ -4,9 +4,9 @@ Scope: [BRIEF](BRIEF.md). Process: [Superpowers/SDD and roadmap rules](docs/rule
 
 ## Now
 
-In flight: [P4.2](#phase-4--getting-started-setup-llamacpp), the recorded walk, in [PR #20](https://github.com/satyrn-ai/satyrn-pi/pull/20); [P4.3](#phase-4--getting-started-setup-llamacpp) is stacked on it. The split merged as #18 and the host card as #19.
+In flight: [P4.3](#phase-4--getting-started-setup-llamacpp), published into the phase-4 branch as PR #21 and waiting for its own request to `main`; and this branch, which splits [phase 5](#phase-5--eval-cli) into four cycles, with [P5.1](#phase-5--eval-cli) and [P5.2](#phase-5--eval-cli) stacked behind it. P4.2's walk merged as #20; phase 4's split as #18 and its host card as #19.
 Parked: preset choices and rented-host qualification await their [research owners](BRIEF.md#decisions-the-research-documents-own).
-Next: [P4.3](#phase-4--getting-started-setup-llamacpp), publishing Getting Started, once its branch is reviewed.
+Next: [P5.3](#phase-5--eval-cli), the Pi child, once P5.2 is reviewed.
 
 Rows are initial proposals. Brainstorm each phase during the port and split or
 add cycles before implementation; one row does not limit a phase to one cycle.
@@ -57,9 +57,14 @@ Each row below carries its own plan when it opens.
 
 ## Phase 5 — Eval CLI
 
+The phase's shared calls — what P5.1 owns, the resolution order, the record
+contents and the counting rules — are settled in the
+[P5.0 spec](docs/superpowers/specs/2026-11-24-p5.0-eval-cli-design.md).
+
 | Cycle | Ships | Excludes | Status |
 | --- | --- | --- | --- |
-| **P5.1** | The Python CLI entry `uvx satyrn-pi eval --suite <name>`, worker resolution via explicit `--worker` else installed npm package, printed and recorded resolution, `--base-url`, and `runs/` output including `run.json`. Distinguish a run from a Pi session; use Model requests and Elapsed seconds in output, with documented counting and aggregation. Prove resolution and orchestration with fixtures; actual suites, Vanilla and Base land next. | Server or pod provisioning; selecting arbitrary workers on ambiguity; a fake run reported as a model measurement; treating repetitions as random seeds. | proposed — after P4.1; document checkout invocation and package artifact verification. |
+| **P5.1** | The `satyrn-pi eval` entry point: worker resolution via explicit `--worker` else the installed npm package, Pi resolved and checked against the declared peer range, suite selection, `--base-url` with a preflight health check, printed resolution, `job.json` and `run.json` under `runs/`, and the counting rules for Model requests and Elapsed seconds — proved with fixtures. | Any child process; workspaces; deadlines; suites and graders; a verdict or a score; publishing the package. | proposed — the base of the phase-5 stack, after P4.3. |
+| **P5.2** | Workspace preparation, the Pi child in print mode with closed stdin and a private agent directory, the process-group deadline, `trial.json` replaced at each boundary, and one trial end to end against a stub task. | Grading, which P6.1 owns; remedies; suites; a verdict or a score. | proposed — stacked on P5.1. |
 
 ## Phase 6 — Suites
 
