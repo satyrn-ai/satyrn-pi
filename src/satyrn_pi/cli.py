@@ -69,7 +69,7 @@ def main(argv: Sequence[str], *, probes, runs_root: Path, cwd: Path) -> int:
     if args.command != "eval":
         return _fail("no subcommand: expected eval")
 
-    started = time.monotonic()
+    started = probes.monotonic()
     try:
         worker = resolve_worker(args.worker, probes.installed_worker)
         pi = resolve_pi(
@@ -78,7 +78,8 @@ def main(argv: Sequence[str], *, probes, runs_root: Path, cwd: Path) -> int:
             peer_range=peer_range(cwd),
             exists=probes.exists,
         )
-        suite = resolve_suite(args.suite, probes.suite_root)
+        suite_root = Path(probes.suite_root)
+        suite = resolve_suite(args.suite, suite_root)
     except ResolutionError as error:
         return _fail(str(error))
 
@@ -98,6 +99,7 @@ def main(argv: Sequence[str], *, probes, runs_root: Path, cwd: Path) -> int:
             "cli_version": CLI_VERSION,
             "repetition_count": 1,
             "worker_path": str(worker.path),
+            "worker_entry": worker.entry,
             "worker_version": worker.version,
             "worker_source": worker.source,
             "pi_path": str(pi.path),
@@ -110,7 +112,7 @@ def main(argv: Sequence[str], *, probes, runs_root: Path, cwd: Path) -> int:
         },
     )
 
-    elapsed = round(time.monotonic() - started, 3)
+    elapsed = round(probes.monotonic() - started, 3)
     write_run(
         path,
         {
@@ -147,24 +149,37 @@ def installed_worker() -> Path | None:
 
 def version_beside(binary: Path) -> str:
     """Read the version from the manifest the binary belongs to, without running it."""
-    resolved = Path(binary).resolve()
-    for parent in resolved.parents:
+    for parent in Path(binary).resolve().parents:
         manifest = parent / "package.json"
-        if manifest.is_file():
+        if not manifest.is_file():
+            continue
+        try:
             version = json.loads(manifest.read_text()).get("version")
-            if isinstance(version, str):
-                return version
+        except json.JSONDecodeError as error:
+            raise ResolutionError(f"{manifest} is not valid JSON: {error}") from error
+        if isinstance(version, str) and version.strip():
+            return version
+        raise ResolutionError(f"{manifest} declares no version")
     raise ResolutionError(f"cannot tell {binary}'s version without running it")
 
 
+def health_url(base_url: str) -> str:
+    """The health endpoint of the base URL's origin, whatever path it carries."""
+    from urllib.parse import urlsplit
+
+    parts = urlsplit(base_url)
+    if parts.scheme not in ("http", "https") or not parts.netloc:
+        raise ResolutionError(f"not an http(s) base URL: {base_url!r}")
+    return f"{parts.scheme}://{parts.netloc}/health"
+
+
 def server_health(base_url: str) -> bool:
-    """A real health check on the origin of the base URL."""
+    """A real health check. The URL is built by `health_url`, tested without a socket."""
     import urllib.error
     import urllib.request
 
-    origin = base_url.split("/v1")[0].rstrip("/")
     try:
-        with urllib.request.urlopen(f"{origin}/health", timeout=5) as response:
+        with urllib.request.urlopen(health_url(base_url), timeout=5) as response:
             return response.status == 200
     except (urllib.error.URLError, OSError):
         return False
@@ -180,15 +195,17 @@ class RealProbes:
 
         self.installed_worker = installed_worker
         path_pi = shutil.which("pi")
-        self.pi_candidates = [project_pi(cwd)] + ([Path(path_pi)] if path_pi else [])
+        self.pi_candidates = [("project", project_pi(cwd))]
+        if path_pi:
+            self.pi_candidates.append(("path", Path(path_pi)))
         self.version_of = version_beside
         self.server_health = server_health
         self.suite_root = Path(
             os.environ.get("SATYRN_PI_SUITES", Path(__file__).parent / "suites")
         )
         self.now = lambda: datetime.now(timezone.utc)
+        self.monotonic = time.monotonic
         self.exists = lambda path: Path(path).is_file()
-        self.calls = []
 
 
 def run() -> int:
