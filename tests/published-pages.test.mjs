@@ -1,4 +1,5 @@
-// The site publishes the home page and the glossary, and nothing else.
+// The site publishes the home page, Getting Started and the glossary, and
+// nothing else. Adding a page is a deliberate edit here, not a side effect.
 //
 // A strict build does not warn about an extra page: a planted third page builds
 // and publishes silently. So the published set is asserted here, against the
@@ -38,9 +39,9 @@ async function tree(t, files) {
   return dir;
 }
 
-test("the real tree publishes exactly the home page and the glossary", async () => {
+test("the real tree publishes exactly the home page, Getting Started and the glossary", async () => {
   const { pages } = await publishedPages(repoRoot);
-  assert.deepEqual(pages, ["glossary.md", "index.md"]);
+  assert.deepEqual(pages, ["getting-started.md", "glossary.md", "index.md"]);
 });
 
 test("an unexcluded page joins the published set", async (t) => {

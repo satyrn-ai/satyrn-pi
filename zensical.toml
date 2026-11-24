@@ -10,10 +10,10 @@ site_dir = "site"
 extra_css = ["stylesheets/satyrn.css"]
 strict = true
 
-# Only the home page and the glossary are published. Zensical builds whatever
-# sits in docs_dir unless it is excluded here, and a strict build does not warn
-# about an extra page, so tests/published-pages.test.mjs re-derives this list and
-# fails when the two disagree.
+# Only the home page, Getting Started and the glossary are published. Zensical
+# builds whatever sits in docs_dir unless it is excluded here, and a strict build
+# does not warn about an extra page, so tests/published-pages.test.mjs re-derives
+# this list and fails when the two disagree.
 exclude_docs = """
 domain.md
 pathologies.md
@@ -25,6 +25,7 @@ superpowers/
 
 nav = [
   { "Home" = ["index.md"] },
+  { "Getting Started" = ["getting-started.md"] },
   { "Glossary" = ["glossary.md"] },
 ]
 

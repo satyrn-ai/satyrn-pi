@@ -15,6 +15,8 @@ The port is in progress. This site carries the home page and the
 being rebuilt in the open, and the [roadmap](https://github.com/satyrn-ai/satyrn-pi/blob/main/ROADMAP.md)
 says what comes next.
 
+[Get started](getting-started.md) — run the model on your machine, in one page.
+
 ## Who it is for
 
 Developers who want a small model doing bounded work on their own machine,
