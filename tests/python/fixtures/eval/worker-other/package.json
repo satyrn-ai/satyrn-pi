@@ -1,0 +1,7 @@
+{
+  "name": "@satyrn-pi/other-worker",
+  "version": "0.0.2",
+  "satyrn": {
+    "worker": "./other.ts"
+  }
+}

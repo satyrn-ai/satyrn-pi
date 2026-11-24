@@ -1,0 +1,197 @@
+"""The eval CLI.
+
+It resolves, prints, gates and records, in that order, and it does nothing else.
+Every fact it would otherwise learn from the machine arrives as a probe, so the
+default test suite can exercise the whole command without a process or a socket.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+import time
+from pathlib import Path
+from typing import Sequence
+
+from . import __version__
+from .records import (
+    aggregate_requests,
+    job_id,
+    job_path,
+    load_trials,
+    write_job,
+    write_run,
+)
+from .resolve import ResolutionError, resolve_pi, resolve_suite, resolve_worker
+
+CLI_VERSION = __version__
+DEFAULT_BASE_URL = "http://127.0.0.1:8001/v1"
+DEFAULT_MODEL = "Mellum2.1-12B-A2.5B-Thinking"
+PEER_PACKAGE = "@earendil-works/pi-coding-agent"
+
+OK = 0
+STOPPED = 2
+
+
+def peer_range(repo: Path) -> str:
+    """The range this package promises an installer, read from the manifest."""
+    manifest = json.loads((Path(repo) / "package.json").read_text())
+    return manifest["peerDependencies"][PEER_PACKAGE]
+
+
+def project_pi(repo: Path) -> Path:
+    """The pinned install `npm ci` provides; absent until setup has run."""
+    return Path(repo) / "node_modules" / ".bin" / "pi"
+
+
+def _parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="satyrn-pi", add_help=True)
+    subcommands = parser.add_subparsers(dest="command")
+    evaluate = subcommands.add_parser("eval", help="run a suite")
+    evaluate.add_argument("--suite", required=True, help="suite name, e.g. basic")
+    evaluate.add_argument("--worker", type=Path, default=None, help="explicit worker path")
+    evaluate.add_argument("--base-url", default=DEFAULT_BASE_URL, help="OpenAI-compatible base")
+    return parser
+
+
+def _fail(message: str) -> int:
+    print(f"satyrn-pi eval: {message}", file=sys.stderr)
+    return STOPPED
+
+
+def main(argv: Sequence[str], *, probes, runs_root: Path, cwd: Path) -> int:
+    try:
+        args = _parser().parse_args(list(argv))
+    except SystemExit as exit_code:
+        return int(exit_code.code or 0)
+
+    if args.command != "eval":
+        return _fail("no subcommand: expected eval")
+
+    started = time.monotonic()
+    try:
+        worker = resolve_worker(args.worker, probes.installed_worker)
+        pi = resolve_pi(
+            candidates=probes.pi_candidates,
+            version_of=probes.version_of,
+            peer_range=peer_range(cwd),
+            exists=probes.exists,
+        )
+        suite = resolve_suite(args.suite, probes.suite_root)
+    except ResolutionError as error:
+        return _fail(str(error))
+
+    if not probes.server_health(args.base_url):
+        return _fail(f"no server answered at {args.base_url}")
+
+    trials = load_trials(Path(probes.suite_root) / "trials")
+    identifier = job_id(probes.now())
+    path = job_path(Path(runs_root), suite, identifier)
+
+    write_job(
+        path,
+        {
+            "suite": suite.name,
+            "suite_version": suite.version,
+            "task_count": len(suite.tasks),
+            "cli_version": CLI_VERSION,
+            "repetition_count": 1,
+            "worker_path": str(worker.path),
+            "worker_version": worker.version,
+            "worker_source": worker.source,
+            "pi_path": str(pi.path),
+            "pi_version": pi.version,
+            "pi_verified": pi.verified,
+            "pi_source": pi.source,
+            "model": DEFAULT_MODEL,
+            "base_url": args.base_url,
+            "started_at": identifier.rsplit("-", 1)[0],
+        },
+    )
+
+    elapsed = round(time.monotonic() - started, 3)
+    write_run(
+        path,
+        {
+            "status": "resolved",
+            "model_requests": aggregate_requests(trials),
+            "elapsed_seconds": elapsed,
+            "counts_source": "fixtures",
+            "exit_status": OK,
+        },
+    )
+
+    print(f"worker   {worker.version} {worker.path} ({worker.source})")
+    print(f"pi       {pi.version} ({'verified' if pi.verified else 'unverified'}, {pi.source})")
+    print(f"suite    {suite.name} {suite.version}, {len(suite.tasks)} tasks")
+    print(f"server   {args.base_url}")
+    print(f"records  {path}")
+    return OK
+
+
+def installed_worker() -> Path | None:
+    """The worker an installed npm package would supply. P8 makes this real."""
+    for candidate in sorted(Path("node_modules").glob("@*/*")):
+        manifest = candidate / "package.json"
+        if not manifest.is_file():
+            continue
+        try:
+            data = json.loads(manifest.read_text())
+        except json.JSONDecodeError:
+            continue
+        if isinstance(data.get("satyrn"), dict) and data["satyrn"].get("worker"):
+            return candidate
+    return None
+
+
+def version_beside(binary: Path) -> str:
+    """Read the version from the manifest the binary belongs to, without running it."""
+    resolved = Path(binary).resolve()
+    for parent in resolved.parents:
+        manifest = parent / "package.json"
+        if manifest.is_file():
+            version = json.loads(manifest.read_text()).get("version")
+            if isinstance(version, str):
+                return version
+    raise ResolutionError(f"cannot tell {binary}'s version without running it")
+
+
+def server_health(base_url: str) -> bool:
+    """A real health check on the origin of the base URL."""
+    import urllib.error
+    import urllib.request
+
+    origin = base_url.split("/v1")[0].rstrip("/")
+    try:
+        with urllib.request.urlopen(f"{origin}/health", timeout=5) as response:
+            return response.status == 200
+    except (urllib.error.URLError, OSError):
+        return False
+
+
+class RealProbes:
+    """The probes a real run uses. Each one is still just an attribute."""
+
+    def __init__(self, cwd: Path) -> None:
+        import os
+        import shutil
+        from datetime import datetime, timezone
+
+        self.installed_worker = installed_worker
+        path_pi = shutil.which("pi")
+        self.pi_candidates = [project_pi(cwd)] + ([Path(path_pi)] if path_pi else [])
+        self.version_of = version_beside
+        self.server_health = server_health
+        self.suite_root = Path(
+            os.environ.get("SATYRN_PI_SUITES", Path(__file__).parent / "suites")
+        )
+        self.now = lambda: datetime.now(timezone.utc)
+        self.exists = lambda path: Path(path).is_file()
+        self.calls = []
+
+
+def run() -> int:
+    """The console entry: real probes, the repository root, the working directory."""
+    cwd = Path.cwd()
+    return main(sys.argv[1:], probes=RealProbes(cwd), runs_root=cwd / "runs", cwd=cwd)
