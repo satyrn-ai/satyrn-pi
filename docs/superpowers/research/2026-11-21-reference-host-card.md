@@ -129,12 +129,43 @@ names that as the risk this card exists to close. Everything else is preserved.
 - **Flags are confirmed, not assumed:** P4.2 reads b12066's own `--help` and
   records any flag this build spells or defaults differently.
 
+## What the pinned command actually did (P4.2, 2026-11-24)
+
+The bytes landed and the command ran. Both digests were checked **before**
+anything executed: the archive matched `9090531…09a19` at 16,548,566 bytes, the
+GGUF matched `ecc4d5b8…fa2755` at 8,071,295,264 bytes, and
+`llama-server --version` reported `build 12066, commit 713319e28`.
+
+Startup reported the allocation below, read from the server's own log at
+`-lv 4` — the default verbosity does not print it:
+
+| Buffer | Size |
+| --- | --- |
+| `CPU_Mapped` model buffer | 121.50 MiB |
+| `MTL0_Mapped` model buffer | 177.20 MiB |
+| `MTL0_Mapped` model buffer | 7,395.27 MiB |
+| `MTL0` KV cache | 364.44 MiB |
+| `MTL0` KV cache | 33.47 MiB |
+| `MTL0` compute buffer | 199.01 MiB |
+| `CPU` compute buffer | 68.53 MiB |
+
+`n_ctx = 50176`, model type `12B.A2.5B`, file type `Q4_K - Medium`.
+
+Two observations about memory, and they disagree on purpose:
+
+- The process's **own footprint** peaked at 634 MB (`footprint -p`), and sat near
+  8.0 GiB resident (`ps -o rss`) while serving.
+- The gap is the GGUF: it is mapped from the file rather than read into private
+  memory, so most of those 8 GiB are clean, file-backed pages the system can drop
+  when the model is idle.
+
+So the number a reader needs is not "500 MB" and not "8 GB" alone: the model needs
+roughly 8 GiB of memory reachable, and the server's private working set is under a
+gigabyte on top of it.
+
 ## What this card does not establish
 
-- No server has been started, and no digest has been checked against bytes on
-  disk; both are P4.2's.
-- Nothing here says the setup answers, or how fast, or with what memory. The
-  allocation and footprint belong to P4.2's session.
+- Nothing here says how fast, or how good: no rate, no latency, no grade.
 - Nothing about Linux, CUDA, Windows or the `macos-x64` build. Those stay
   unverified until someone runs them.
 - No historical measurement transfers. Historical baselines used b11985 and

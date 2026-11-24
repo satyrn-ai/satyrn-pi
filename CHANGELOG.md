@@ -36,3 +36,7 @@
   asset digest, the Q4_K_M weights by Hugging Face revision, size and sha256, the
   preserved settings, and the serve command with `-hf` replaced by an explicit
   `-m` path so a repository selector cannot stand in for the pinned file.
+- Run the pinned configuration: b12066 from its verified asset, Q4_K_M from its
+  verified file, serving `127.0.0.1:8001` with the preserved flags, answering a
+  request, and recording the allocation the server reports beside the footprint
+  the process actually holds.
