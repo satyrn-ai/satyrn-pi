@@ -21,10 +21,6 @@ from satyrn_pi.resolve import (
 FIXTURES = Path(__file__).parent / "fixtures" / "eval"
 
 
-def worker_at(path: Path) -> Path:
-    return path
-
-
 def test_explicit_worker_wins_over_the_installed_one() -> None:
     resolved = resolve_worker(FIXTURES / "worker-stub", lambda: FIXTURES / "worker-other")
     assert resolved.source == "explicit"
@@ -76,10 +72,10 @@ def test_the_project_binary_wins_over_path() -> None:
 
     def version_of(path: Path) -> str:
         calls.append(path)
-        return "1.5.2" if "project" in str(path) else "1.7.0"
+        return "1.5.2" if path == Path("/p/node_modules/.bin/pi") else "1.7.0"
 
     resolved = resolve_pi(
-        candidates=[Path("/project/node_modules/.bin/pi"), Path("/usr/bin/pi")],
+        candidates=[("project", Path("/p/node_modules/.bin/pi")), ("path", Path("/usr/bin/pi"))],
         version_of=version_of,
         peer_range="^1.1.0",
         target="1.5.2",
@@ -87,12 +83,12 @@ def test_the_project_binary_wins_over_path() -> None:
     )
     assert resolved.source == "project"
     assert resolved.verified is True
-    assert calls == [Path("/project/node_modules/.bin/pi")]
+    assert calls == [Path("/p/node_modules/.bin/pi")]
 
 
 def test_a_path_binary_is_used_only_when_the_project_has_none() -> None:
     resolved = resolve_pi(
-        candidates=[Path("/usr/bin/pi")],
+        candidates=[("path", Path("/usr/bin/pi"))],
         version_of=lambda path: "1.4.0",
         peer_range="^1.1.0",
         target="1.5.2",
@@ -105,7 +101,7 @@ def test_a_path_binary_is_used_only_when_the_project_has_none() -> None:
 def test_the_target_is_verified_and_the_floor_is_not() -> None:
     def resolve(version: str) -> Pi:
         return resolve_pi(
-            candidates=[Path("/p/pi")],
+            candidates=[("project", Path("/p/pi"))],
             version_of=lambda _: version,
             peer_range="^1.1.0",
             exists=lambda _: True,
@@ -121,7 +117,7 @@ def test_the_target_is_verified_and_the_floor_is_not() -> None:
 def test_an_out_of_range_version_stops(version: str) -> None:
     with pytest.raises(ResolutionError):
         resolve_pi(
-            candidates=[Path("/p/pi")],
+            candidates=[("project", Path("/p/pi"))],
             version_of=lambda _: version,
             peer_range="^1.1.0",
             exists=lambda _: True,
@@ -130,7 +126,7 @@ def test_an_out_of_range_version_stops(version: str) -> None:
 
 def test_a_version_inside_the_range_but_past_the_target_runs_unverified() -> None:
     resolved = resolve_pi(
-        candidates=[Path("/p/pi")],
+        candidates=[("project", Path("/p/pi"))],
         version_of=lambda _: "1.7.0",
         peer_range="^1.1.0",
         exists=lambda _: True,
@@ -145,7 +141,7 @@ def test_no_pi_at_all_stops() -> None:
 
 def test_an_absent_candidate_is_skipped_not_used() -> None:
     resolved = resolve_pi(
-        candidates=[Path("/missing/pi"), Path("/p/pi")],
+        candidates=[("project", Path("/missing/pi")), ("path", Path("/p/pi"))],
         version_of=lambda _: "1.5.2",
         peer_range="^1.1.0",
         exists=lambda path: str(path) == "/p/pi",
@@ -180,3 +176,41 @@ def test_the_worker_does_not_carry_results() -> None:
 def test_the_manifest_is_json_not_a_guess() -> None:
     manifest = json.loads((FIXTURES / "worker-stub" / "package.json").read_text())
     assert manifest["satyrn"]["worker"].endswith(".ts")
+
+
+def test_a_suite_that_names_itself_differently_is_refused(tmp_path: Path) -> None:
+    root = tmp_path / "suites"
+    (root / "suite-basic").mkdir(parents=True)
+    (root / "suite-basic" / "suite.json").write_text(
+        json.dumps({"name": "other", "version": "0.0.1", "tasks": [
+            {"id": "t", "instructions": "i", "fixture": "f", "verification": "v"}]})
+    )
+    with pytest.raises(ResolutionError) as raised:
+        resolve_suite("basic", root)
+    assert "other" in str(raised.value)
+
+
+def test_a_task_missing_a_field_fails_before_any_job_exists(tmp_path: Path) -> None:
+    root = tmp_path / "suites"
+    (root / "suite-basic").mkdir(parents=True)
+    (root / "suite-basic" / "suite.json").write_text(
+        json.dumps({"name": "basic", "version": "0.0.1", "tasks": [{"id": "t"}]})
+    )
+    with pytest.raises(ResolutionError) as raised:
+        resolve_suite("basic", root)
+    assert "instructions" in str(raised.value)
+
+
+def test_malformed_suite_json_is_a_resolution_error(tmp_path: Path) -> None:
+    root = tmp_path / "suites"
+    (root / "suite-basic").mkdir(parents=True)
+    (root / "suite-basic" / "suite.json").write_text("{not json")
+    with pytest.raises(ResolutionError):
+        resolve_suite("basic", root)
+
+
+def test_a_zero_major_caret_follows_npm(tmp_path: Path) -> None:
+    assert satisfies("0.1.0", "^0.1.0") is True
+    assert satisfies("0.9.0", "^0.1.0") is False
+    assert satisfies("0.0.1", "^0.0.1") is True
+    assert satisfies("0.0.2", "^0.0.1") is False

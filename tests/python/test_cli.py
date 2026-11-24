@@ -22,7 +22,7 @@ class Probes:
     """What the CLI would otherwise learn from the machine. Tests supply fakes."""
 
     installed_worker: Callable[[], Path | None] = lambda: FIXTURES / "worker-stub"
-    pi_candidates: list[Path] = field(default_factory=lambda: [Path("/p/pi")])
+    pi_candidates: list = field(default_factory=lambda: [("project", Path("/p/pi"))])
     version_of: Callable[[Path], str] = lambda _: "1.5.2"
     server_health: Callable[[str], bool] = lambda _: True
     suite_root: Path = FIXTURES
@@ -30,11 +30,14 @@ class Probes:
         2026, 11, 24, 14, 30, 5, tzinfo=timezone.utc
     )
     exists: Callable[[Path], bool] = lambda _: True
-    calls: list[str] = field(default_factory=list)
+    ticks: list[float] = field(default_factory=lambda: [100.0, 100.025])
+    monotonic: Callable[[], float] = lambda: 0.0
 
 
 def run(tmp_path, *argv, probes=None):
     probes = probes or Probes()
+    ticks = list(probes.ticks)
+    probes.monotonic = lambda: ticks.pop(0)
     runs = tmp_path / "runs"
     code = cli.main(["eval", *argv], probes=probes, runs_root=runs, cwd=REPO)
     return code, probes, runs
@@ -72,7 +75,8 @@ def test_model_requests_are_summed_and_the_clock_is_not(tmp_path: Path) -> None:
     summary = json.loads((only_job(runs) / "run.json").read_text())
     trials = load_trials(FIXTURES / "trials")
     assert summary["model_requests"] == aggregate_requests(trials) == 10
-    assert summary["elapsed_seconds"] < sum(t["elapsed_seconds"] for t in trials)
+    assert summary["elapsed_seconds"] == 0.025
+    assert summary["elapsed_seconds"] != sum(t["elapsed_seconds"] for t in trials)
 
 
 def test_an_unresolvable_worker_stops_without_a_run_directory(tmp_path: Path) -> None:
@@ -121,10 +125,24 @@ def test_a_pi_that_runs_but_is_not_the_target_is_marked_unverified(tmp_path: Pat
 
 
 def test_help_needs_no_probe(tmp_path: Path) -> None:
-    probes = Probes()
-    code = cli.main(["eval", "--help"], probes=probes, runs_root=tmp_path / "runs", cwd=REPO)
+    class Untouchable:
+        def __getattr__(self, name):
+            raise AssertionError(f"help touched probe {name!r}")
+
+    code = cli.main(["eval", "--help"], probes=Untouchable(), runs_root=tmp_path / "runs", cwd=REPO)
     assert code == 0
-    assert probes.calls == []
+
+
+def test_health_url_uses_the_origin_not_the_path() -> None:
+    assert cli.health_url("http://127.0.0.1:8001/v1") == "http://127.0.0.1:8001/health"
+    assert cli.health_url("https://host/api/v1") == "https://host/health"
+    assert cli.health_url("http://host:9000/x/v1") == "http://host:9000/health"
+
+
+@pytest.mark.parametrize("bad", ["ftp://host/v1", "not a url", "/v1", ""])
+def test_health_url_refuses_a_non_http_base(bad: str) -> None:
+    with pytest.raises(Exception):
+        cli.health_url(bad)
 
 
 def test_the_health_probe_is_asked_about_the_base_url(tmp_path: Path) -> None:
@@ -157,3 +175,32 @@ def test_started_at_carries_the_stamp_not_its_first_field(tmp_path: Path) -> Non
     assert code == 0
     job = json.loads((only_job(runs) / "job.json").read_text())
     assert job["started_at"] == "2026-11-24T143005Z"
+
+
+def test_version_beside_reads_the_manifest(tmp_path: Path) -> None:
+    package = tmp_path / "node_modules" / "@earendil-works" / "pi-coding-agent"
+    (package / "dist" / "bundle").mkdir(parents=True)
+    (package / "package.json").write_text(json.dumps({"version": "1.5.2"}))
+    binary = package / "dist" / "bundle" / "cli.js"
+    binary.write_text("#!/usr/bin/env node\n")
+    assert cli.version_beside(binary) == "1.5.2"
+
+
+def test_version_beside_without_a_manifest_is_a_resolution_error(tmp_path: Path) -> None:
+    binary = tmp_path / "loose" / "pi"
+    (tmp_path / "loose").mkdir()
+    binary.write_text("x")
+    from satyrn_pi.resolve import ResolutionError
+
+    with pytest.raises(ResolutionError):
+        cli.version_beside(binary)
+
+
+def test_version_beside_with_malformed_json_is_a_resolution_error(tmp_path: Path) -> None:
+    (tmp_path / "package.json").write_text("{not json")
+    binary = tmp_path / "pi"
+    binary.write_text("x")
+    from satyrn_pi.resolve import ResolutionError
+
+    with pytest.raises(ResolutionError):
+        cli.version_beside(binary)

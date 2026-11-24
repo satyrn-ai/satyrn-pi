@@ -23,13 +23,15 @@ FIXTURES = Path(__file__).parent / "fixtures" / "eval"
 SUITE = Suite(name="basic", version="0.0.1", tasks=())
 
 
-def test_job_id_is_utc_fixed_width_and_unique() -> None:
+def test_job_id_is_utc_fixed_width_and_unique(monkeypatch: pytest.MonkeyPatch) -> None:
     moment = datetime(2026, 11, 24, 14, 30, 5, tzinfo=timezone.utc)
+    suffixes = iter(["aaaaaa", "bbbbbb"])
+    monkeypatch.setattr("satyrn_pi.records.secrets.token_hex", lambda _: next(suffixes))
     first = job_id(moment)
     second = job_id(moment)
     assert re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{6}Z-[0-9a-f]{6}", first)
-    assert first.startswith("2026-11-24T143005Z-")
-    assert first != second
+    assert first == "2026-11-24T143005Z-aaaaaa"
+    assert second == "2026-11-24T143005Z-bbbbbb"
 
 
 def test_job_path_nests_under_the_runs_tree(tmp_path: Path) -> None:
@@ -90,8 +92,10 @@ def test_a_run_records_a_clock_that_is_not_the_trial_sum(tmp_path: Path) -> None
     assert written["elapsed_seconds"] < trial_sum
 
 
-def test_run_json_is_written_after_job_json(tmp_path: Path) -> None:
+def test_the_two_writes_do_not_depend_on_each_other(tmp_path: Path) -> None:
     path = job_path(tmp_path, SUITE, "2026-11-24T143005Z-abcdef")
-    write_job(path, {"suite": "basic"})
     write_run(path, {"status": "resolved"})
-    assert (path / "job.json").stat().st_mtime <= (path / "run.json").stat().st_mtime
+    assert (path / "run.json").is_file()
+    assert not (path / "job.json").exists()
+    write_job(path, {"suite": "basic"})
+    assert (path / "job.json").is_file()
