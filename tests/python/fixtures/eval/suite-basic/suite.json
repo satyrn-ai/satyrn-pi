@@ -1,0 +1,24 @@
+{
+  "name": "basic",
+  "version": "0.0.1",
+  "tasks": [
+    {
+      "id": "task-01",
+      "instructions": "Add a docstring to the module.",
+      "fixture": "fixtures/task-01",
+      "verification": "The module imports and the docstring is non-empty."
+    },
+    {
+      "id": "task-02",
+      "instructions": "Rename a variable to say what it holds.",
+      "fixture": "fixtures/task-02",
+      "verification": "The original tests still pass."
+    },
+    {
+      "id": "task-03",
+      "instructions": "Replace a bare except with a named exception.",
+      "fixture": "fixtures/task-03",
+      "verification": "The error path is still exercised."
+    }
+  ]
+}

@@ -54,3 +54,7 @@
   Reopen the accessibility-statement entry, whose condition this page meets.
 - Split phase 5 into four stacked cycles, P5.1 to P5.4: resolution and records
   proved with fixtures, workspace preparation, the Pi child, then its deadline.
+- Add `satyrn-pi eval`: worker, Pi, suite and server resolved and printed, a
+  preflight health check that stops before any record exists, `job.json` and
+  `run.json` under `runs/`, and the counting rules — proven with fixtures, no
+  process and no socket. Pi resolves from the project's pinned 1.5.2 install.

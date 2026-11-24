@@ -1,0 +1,7 @@
+{
+  "name": "@satyrn-pi/fixture-worker",
+  "version": "0.0.1",
+  "satyrn": {
+    "worker": "./worker.ts"
+  }
+}
