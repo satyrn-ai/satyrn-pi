@@ -86,6 +86,14 @@ def main(argv: Sequence[str], *, probes, runs_root: Path, cwd: Path) -> int:
     if not probes.server_health(args.base_url):
         return _fail(f"no server answered at {args.base_url}")
 
+    offered = tuple(probes.server_models(args.base_url))
+    if DEFAULT_MODEL not in offered:
+        listed = ", ".join(offered) or "nothing"
+        return _fail(
+            f"the server at {args.base_url} does not serve {DEFAULT_MODEL} "
+            f"(it lists: {listed}); this is not the pinned llama-server"
+        )
+
     trials = load_trials(Path(probes.suite_root) / "trials")
     identifier = job_id(probes.now())
     path = job_path(Path(runs_root), suite, identifier)
@@ -173,6 +181,22 @@ def health_url(base_url: str) -> str:
     return f"{parts.scheme}://{parts.netloc}/health"
 
 
+def server_models(base_url: str) -> tuple[str, ...]:
+    """The model names a server offers, so a run cannot record one it never served."""
+    import json as _json
+    import urllib.error
+    import urllib.request
+
+    try:
+        with urllib.request.urlopen(f"{base_url.rstrip('/')}/models", timeout=5) as response:
+            payload = _json.loads(response.read())
+    except (urllib.error.URLError, OSError, ValueError):
+        return ()
+    return tuple(
+        entry.get("id", "") for entry in payload.get("data", []) if isinstance(entry, dict)
+    )
+
+
 def server_health(base_url: str) -> bool:
     """A real health check. The URL is built by `health_url`, tested without a socket."""
     import urllib.error
@@ -200,6 +224,7 @@ class RealProbes:
             self.pi_candidates.append(("path", Path(path_pi)))
         self.version_of = version_beside
         self.server_health = server_health
+        self.server_models = server_models
         self.suite_root = Path(
             os.environ.get("SATYRN_PI_SUITES", Path(__file__).parent / "suites")
         )
