@@ -25,6 +25,7 @@ class Probes:
     pi_candidates: list = field(default_factory=lambda: [("project", Path("/p/pi"))])
     version_of: Callable[[Path], str] = lambda _: "1.5.2"
     server_health: Callable[[str], bool] = lambda _: True
+    server_models: Callable[[str], tuple[str, ...]] = lambda _: ("Mellum2.1-12B-A2.5B-Thinking",)
     suite_root: Path = FIXTURES
     now: Callable[[], datetime] = lambda: datetime(
         2026, 11, 24, 14, 30, 5, tzinfo=timezone.utc
@@ -204,3 +205,33 @@ def test_version_beside_with_malformed_json_is_a_resolution_error(tmp_path: Path
 
     with pytest.raises(ResolutionError):
         cli.version_beside(binary)
+
+
+def test_a_server_without_the_pinned_alias_is_refused(tmp_path: Path) -> None:
+    probes = Probes(server_models=lambda _: (
+        "mellum2.1-12b-a2.5b-thinking-mlx",
+        "qwen3.8-flash-next-oq4e-mtp",
+    ))
+    code, _, runs = run(tmp_path, "--suite", "basic", probes=probes)
+    assert code == 2
+    assert not runs.exists()
+
+
+def test_the_refusal_names_what_the_server_actually_offers(tmp_path: Path, capsys) -> None:
+    probes = Probes(server_models=lambda _: ("mellum2.1-12b-a2.5b-thinking-mlx",))
+    run(tmp_path, "--suite", "basic", probes=probes)
+    printed = capsys.readouterr().err
+    assert "mellum2.1-12b-a2.5b-thinking-mlx" in printed
+    assert cli.DEFAULT_MODEL in printed
+
+
+def test_an_empty_model_list_is_refused(tmp_path: Path) -> None:
+    code, _, runs = run(tmp_path, "--suite", "basic", probes=Probes(server_models=lambda _: ()))
+    assert code == 2
+    assert not runs.exists()
+
+
+def test_the_pinned_alias_lets_the_run_through(tmp_path: Path) -> None:
+    probes = Probes(server_models=lambda _: (cli.DEFAULT_MODEL,))
+    code, _, _ = run(tmp_path, "--suite", "basic", probes=probes)
+    assert code == 0
