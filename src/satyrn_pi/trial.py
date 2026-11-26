@@ -24,8 +24,11 @@ def write_trial(trial: Path, update: Mapping[str, object]) -> None:
     existing: dict[str, object] = {}
     if target.is_file():
         existing = json.loads(target.read_text())
+    previous = existing.get("status")
     merged = {**existing, **update}
     status = merged.get("status")
+    if previous in FINAL and status != previous:
+        raise ValueError(f"a trial at {previous!r} is final and cannot become {status!r}")
     if status not in STATUSES:
         raise ValueError(f"unknown trial status: {status!r}")
     if status != RESULT_STATUS:
