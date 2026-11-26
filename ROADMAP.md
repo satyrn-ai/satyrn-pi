@@ -82,22 +82,29 @@ contents and the counting rules — are settled in the
 
 ## Phase 6 — Suites
 
-The phase's shared calls — the four cycles, the fixture copy, the grading seam,
-grade identity and the primary grade — are settled in the
-[P6.0 spec](docs/superpowers/specs/2026-11-26-p6.0-suites-and-grading-design.md).
+The phase's shared calls — the six cycles, the copy and its provenance categories, the
+authored suite manifests, the grading seam, the isolation and bound, grade identity and
+the primary grade — are settled in the
+[P6.0 spec](docs/superpowers/specs/2026-11-26-p6.0-suites-and-grading-design.md), with
+its [grading environment note](docs/superpowers/research/2026-11-26-grading-environment.md).
+The P5.4 row and the P5.0 spec say grading belongs to P6.1; I.3 corrects both to
+"grading starts in P6.2", and this phase checks the inherited wording after the stack
+rebases.
 
 | Cycle | Ships | Excludes | Status |
 | --- | --- | --- | --- |
-| **P6.1** | Suite data: the Easy, Medium and Hard fixtures, prompts, `expected.json`, `layout.json` and graders copied byte-verbatim from `mellum-worker` `0e4a9b68` into `src/satyrn_pi/suites/`, with `SOURCES.json` recording each file's source path, commit and SHA-256 and a test recomputing them; a loader that refuses a duplicated expected ID, an ID whose grader module is absent, an ID outside the `grader_tests/` prefix, or an entry set that differs from the file set; the repository-weight budget raised to 320 files and 2.5 MB, with its reason. | Grading; any child process; a verdict; the source's layout, leak and contamination markers. | proposed — after P5.1 lands; the copy cannot fit the current weight budget. |
-| **P6.2** | Grading: the `grade(workspace, suite, *, runner)` seam, with a stub runner in the default suite and the real adapter beside `RealProcess`; the grader copied to `grader_tests/` after the session; `-rA` parsing with `checksRan`; `verdict.json` with per-check results, grade identity and the primary flag; the trial reaching `graded`; the `run.json` summary. | Witness qualification; corrected grades; the guide. | proposed — stacked on P6.1. |
-| **P6.3** | Witness qualification: `witnesses.json` per suite giving each copied known-good and known-broken tree's expected per-check outcome, the gaps the inherited grade accepts written down rather than fixed, one marked integration test that runs real pytest and is skipped by default, and the qualification record with its command, tails and hashes. | Correcting the inherited grade's semantics; a model run; CI running the marked test. | proposed — stacked on P6.2. |
-| **P6.4** | Feedback and the guide: expected/observed feedback under its own rule version, re-earned from `3e20e161` with the wrong-favicon and route-only-ID witnesses and recorded apart from the grade's `0e4a9b68`; `docs/scoring-and-evidence.md`; glossary entries for grade, verdict and witness. | Redispatch or settle gates; merging gate-message versions; the Education challenge UI; a measured rate. | proposed — stacked on P6.3. |
+| **P6.1** | Suite data and provenance: the 95 non-grader files copied byte-verbatim from `mellum-worker` `0e4a9b68` into `src/satyrn_pi/suites/suite-<name>/source/`; `SOURCES.json` distinguishing `copied`, `reference` (the 24 source grader files, no local copy) and `authored`, with the hashes recomputed by a test and the loader's file-set check counting only `copied` and `authored`; an authored `suite.json` per suite, its instruction the joined prompts under `promptMode: joined`; loader refusals for a duplicated expected ID, an absent grader module, a wrong prefix and a stray file; the repository-weight budget raised to 320 files and 2.5 MB. | Grading; any child process; a verdict; copied graders; the source's layout, leak and contamination markers. | proposed — after P5.1 lands. |
+| **P6.2** | Bounded grading for Easy: the `grade(workspace, suite, *, graders, runner, timeout)` seam, a stub runner in the default suite and the spawning adapter beside `RealProcess`; the grader copy outside the workspace with the workspace's pytest configuration, `PYTEST_ADDOPTS`, `PYTEST_PLUGINS` and plugin autoloading suppressed and the environment recorded; `verdict.json` with its outcome; the trial reaching `graded`; the timeout with process-group cleanup; exit 0/1/2 as the outcome table fixes; Easy's four graders re-earned and proven against its known-good and known-broken trees. | Medium's and Hard's graders; cross-suite qualification; feedback; the guide. | proposed — stacked on P6.1. |
+| **P6.3** | Medium's grader: its 18 preserved checks re-earned under the source's module and test names, proven against Medium's own known-good and known-broken trees, with any divergence recorded rather than reconciled. | Making a check agree with its witness; Hard's grader; the gap record. | proposed — stacked on P6.2. |
+| **P6.4** | Hard's grader: its 34 preserved checks re-earned the same way, including the migration and visit checks, proven against Hard's own witnesses. | The same exclusions as P6.3; a demo or fine-tune answer. | proposed — stacked on P6.3, because Hard's contract differs from Medium's. |
+| **P6.5** | Cross-suite qualification: `witnesses.json` per suite recording, per check, whether the inherited grade accepts or rejects each witness; the gaps that leniency leaves visible; execution-environment witnesses — a hostile workspace `conftest.py` and `pyproject.toml`, an inherited `PYTEST_ADDOPTS`, and a hanging app that must end `timed-out` with its group gone; the marked integration path and its skip test; the qualification record with commands, tails and hashes. | Correcting inherited semantics; a model run; CI running the marked test; a measured rate. | proposed — stacked on P6.4. |
+| **P6.6** | Feedback and the guide: expected/observed feedback under its own rule version and hash, re-earned from `3e20e161` with the wrong-favicon and route-only-ID witnesses and recorded apart from the grade's `0e4a9b68`; `docs/scoring-and-evidence.md`; glossary entries for grade, verdict and witness. | Redispatch or settle gates; merging gate-message versions; the Education challenge UI; a measured rate. | proposed — stacked on P6.5; closes the phase. |
 
 ## Phase 7 — Vanilla
 
 | Cycle | Ships | Excludes | Status |
 | --- | --- | --- | --- |
-| **P7.1** | Vanilla: only Pi and the trace recorder, no worker or remedies; isolated settings, resolved model/host/grader provenance, and a recorded baseline. Specify how to select Vanilla independently of the suite. Fix the intended context-file policy and other run settings before deciding runs. | Preset promotion; a worker-loaded run described as Vanilla; inherited rates presented as new-stack measurements. | proposed — after P6.1; screens precede any preregistered comparison. |
+| **P7.1** | Vanilla: only Pi and the trace recorder, no worker or remedies; isolated settings, resolved model/host/grader provenance, and a recorded baseline. Specify how to select Vanilla independently of the suite. Fix the intended context-file policy and other run settings before deciding runs. | Preset promotion; a worker-loaded run described as Vanilla; inherited rates presented as new-stack measurements. | proposed — after phase 6 closes: its baseline needs qualified grading, not just suite data. |
 
 ## Phase 8 — Base
 
