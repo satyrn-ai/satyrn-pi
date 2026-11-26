@@ -290,8 +290,22 @@ def server_health(base_url: str) -> bool:
         return False
 
 
+def kill_group(pid: int) -> None:
+    """Kill the group the child leads.
+
+    `start_new_session=True` makes the child a session and group leader, so its
+    pid *is* the group id.
+    """
+    import signal
+
+    try:
+        os.killpg(pid, signal.SIGKILL)
+    except ProcessLookupError:
+        pass
+
+
 class RealProcess:
-    """The one place a child is started. Its own session group is P5.4's to kill."""
+    """The one place a child is started. It leads its own session, so an interrupt can kill the group by pid."""
 
     def __init__(self, argv, cwd: Path, env) -> None:
         import subprocess
@@ -309,6 +323,10 @@ class RealProcess:
 
     def communicate(self, timeout: float | None = None) -> tuple[str, str]:
         return self._process.communicate(timeout=timeout)
+
+    def kill_group(self) -> None:
+        """Kill everything the child started, not only the child."""
+        kill_group(self._process.pid)
 
     @property
     def exit_status(self) -> int:

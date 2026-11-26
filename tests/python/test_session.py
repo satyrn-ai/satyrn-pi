@@ -119,14 +119,20 @@ class Handle:
         returncode: int = 0,
         writes: Path | None = None,
         stdout: str = "",
+        interrupted: bool = False,
     ) -> None:
         self.exit_status = returncode
         self._writes = writes
         self._stdout = stdout
+        self.interrupted = interrupted
+        self.killed = 0
         self.calls: list[tuple] = []
 
     def communicate(self, timeout: float | None = None) -> tuple[str, str]:
         self.calls.append(("communicate", timeout))
+        if self.interrupted:
+            self.interrupted = False
+            raise KeyboardInterrupt()
         if self._writes is not None:
             self._writes.parent.mkdir(parents=True, exist_ok=True)
             self._writes.write_text(
@@ -142,6 +148,10 @@ class Handle:
                 + "\n"
             )
         return self._stdout, ""
+
+    def kill_group(self) -> None:
+        self.killed += 1
+        self.exit_status = -9
 
 
 def run(tmp_path: Path, handle: Handle, **overrides):
@@ -235,3 +245,11 @@ def test_a_valid_json_non_object_does_not_stop_the_count(tmp_path: Path, line: s
         line + "\n" + json.dumps({"type": "message", "message": {"role": "assistant"}}) + "\n"
     )
     assert session.count_requests(artifact) == 1
+
+
+def test_an_interrupt_kills_the_group_and_reaps_the_child(tmp_path: Path) -> None:
+    handle = Handle(interrupted=True)
+    with pytest.raises(KeyboardInterrupt):
+        run(tmp_path, handle)
+    assert handle.killed == 1
+    assert [call[0] for call in handle.calls] == ["communicate", "communicate"]

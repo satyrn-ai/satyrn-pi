@@ -163,7 +163,11 @@ def run_session(
     spawn: Callable[[Sequence[str], Path, Mapping[str, str]], object],
     clock: Callable[[], float],
 ) -> Outcome:
-    """Spawn one child, wait for it, and turn its remains into an `Outcome`."""
+    """Spawn one child, wait for it, and turn its remains into an `Outcome`.
+
+    An interrupt kills the child's process group and reaps it before the
+    exception continues, so no descendant outlives the run that started it.
+    """
     argv = session_argv(
         binary=binary,
         prompt=prompt,
@@ -174,7 +178,12 @@ def run_session(
     )
     started = clock()
     handle = spawn(argv, Path(workspace), session_env(base_env, agent_dir=agent_dir))
-    _, stderr = handle.communicate()
+    try:
+        _, stderr = handle.communicate()
+    except KeyboardInterrupt:
+        handle.kill_group()
+        handle.communicate()
+        raise
     elapsed = round(clock() - started, 3)
     trajectory = collect_trajectory(session_dir, session_id, Path(trial))
     return Outcome(
