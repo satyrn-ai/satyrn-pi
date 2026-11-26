@@ -7,9 +7,10 @@ Start with the two packages, then follow a run and its data across their boundar
 
 ## Current and planned implementation
 
-**Current implementation:** P1.1 provides package skeletons only. The npm package
-has no worker or remedies yet, and `src/satyrn_pi/` contains only the package
-version. Eval execution, suites and grading are not available yet.
+**Current implementation:** the eval CLI resolves the worker, Pi, suite and
+server, prepares each trial's workspace, runs one bounded Pi session per trial and
+records what it resolved and what ran. The npm package still has no worker or
+remedies, and suites, grading and verdicts are not available yet.
 
 **Port decision:** the concept relationships, ownership rules and boundaries below
 are the target architecture. Paths marked planned become real in their owning
@@ -87,7 +88,7 @@ prepares each workspace, starts Pi sessions, invokes the grader, and writes
 records. Suites and graders are package data rather than a checkout-local
 source tree.
 
-The planned runtime lives under `src/satyrn_pi/`. The CLI never imports the
+The runtime lives under `src/satyrn_pi/`. The CLI never imports the
 worker's TypeScript or reaches into its extension state. It invokes a resolved
 worker and observes the files and process results that cross the package
 boundary.
@@ -100,11 +101,11 @@ boundary.
 | A pathology-specific behavior | `remedies/<kind>/<name>.ts` in the npm package | Planned; remedy cycles begin in P10.1 |
 | Remedy selection or order | Preset JSON in the npm package | Planned with Base and later presets |
 | Recorder output | Recorder extension in the npm package | Planned with Vanilla in P7.1 |
-| CLI resolution or process orchestration | `src/satyrn_pi/` | Package root current; runtime planned in P5.1 |
+| CLI resolution or process orchestration | `src/satyrn_pi/` | Current from P5.1 and P5.3 |
 | Tasks, fixtures or variants | Python suite package data | Planned in P6.1 |
 | Grading expectations or checks | Python grader package data | Planned in P6.1 |
-| Process deadlines or redispatch | Python eval orchestration | Planned in P5.1 and later acceptance work |
-| Record contents and provenance | Python run-record implementation; output under ignored `runs/` | `runs/` ignore current; records planned from P5.1 |
+| Process deadlines or redispatch | Python eval orchestration | Deadlines current from P5.4; redispatch with later acceptance work |
+| Record contents and provenance | Python run-record implementation; output under ignored `runs/` | Current from P5.1 to P5.4; `graded` and its verdict arrive with P6.1 |
 | Vocabulary or architectural ownership | `docs/glossary.md` or `docs/domain.md` | Current P1.2 documentation |
 
 ## Import direction and the boundary
@@ -202,7 +203,8 @@ has already ended.
 
 ### 5. Keep the evidence
 
-The planned record tree separates job, trial, session artifact and verdict:
+The record tree separates job, trial, session artifact and verdict (the verdict
+file arrives with P6.1):
 
 ```text
 runs/<date>-<suite>/<job>/
@@ -288,7 +290,7 @@ destinations are named without links until those documents exist.
 | --- | --- | --- |
 | Understand concepts and ownership | `docs/domain.md` | Current in P1.2 |
 | Contribute through repository workflows | Root `AGENTS.md` and contributor guidance | Current in P2.2 |
-| Run an eval | Eval CLI guide | Planned in P5.1 |
+| Run an eval | [Eval CLI guide](eval-cli.md) | Current from P5.1; P5.3 and P5.4 extend it |
 | Write a suite, task or grader | Eval authoring guide | Planned in P6.1 |
 | Interpret scores and evidence | Scoring and evidence guide | Planned in P6.1 |
 
@@ -297,9 +299,10 @@ reachable from an agent's normal entry point. The P5.1 operational guide owns
 copyable commands, prerequisites, outputs and failure behavior. The P6.1 guides
 own suite and grader authoring contracts and score interpretation.
 
-Until those cycles land, the eval runtime and authoring interfaces are planned,
-not executable. After a run becomes available, verification uses configuration evidence, execution evidence and result evidence
-rather than terminal output alone. This routing section discovers capabilities;
+The eval runtime is executable from P5.4; the authoring interfaces — suites,
+graders and score interpretation — remain planned until P6.1. Verification uses
+configuration evidence, execution evidence and result evidence rather than
+terminal output alone. This routing section discovers capabilities;
 it does not duplicate their operational manuals.
 
 ## Outside the product
