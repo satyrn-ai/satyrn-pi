@@ -34,3 +34,19 @@ kept. An empty backlog is valid — do not invent entries to fill this file.
 - **Reopen when:** the team wants a failing build to block a merge, or a second
   contributor starts opening pull requests.
 - **Links:** [P3.2 spec](docs/superpowers/specs/2026-11-19-p3.2-deploy-design.md)
+
+### Read the version of a globally installed Pi
+
+- **Area:** the eval CLI, from P5.1 and P5.3
+- **Deferred:** Pi resolves from the project's pinned `node_modules/.bin/pi` first
+  and from `PATH` only when that is absent. The `PATH` fallback reads the version
+  from a `package.json` beside the binary; a global install (Volta, Homebrew, npm
+  `-g`) is a link whose manifest is not necessarily an ancestor, so the fallback
+  stops with `cannot tell ...'s version without running it` instead of guessing.
+  `npm ci` is the supported path, and a live run from a worktree without it
+  demonstrated the stop rather than a false version.
+- **Reopen when:** someone runs eval from a checkout without `npm ci`, or a cycle
+  makes the global install a supported entry point — P7.1's run settings or P9.1's
+  installer walkthrough.
+- **Links:** [P5.3 plan](docs/superpowers/plans/2026-11-24-p5.3-pi-child.md),
+  `version_beside` in `src/satyrn_pi/cli.py`

@@ -2,19 +2,52 @@
 
 from __future__ import annotations
 
+import itertools
 import json
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Iterator
 
 import pytest
 
 from satyrn_pi import cli
-from satyrn_pi.records import aggregate_requests, load_trials
+from satyrn_pi.records import aggregate_requests, read_trials
 
 FIXTURES = Path(__file__).parent / "fixtures" / "eval"
 REPO = Path(__file__).resolve().parents[2]
+
+
+class Handle:
+    """A spawned child as the CLI's real spawn would return one."""
+
+    def __init__(self, exit_status: int) -> None:
+        self.exit_status = exit_status
+
+    def communicate(self, timeout: float | None = None) -> tuple[str, str]:
+        return "", ""
+
+
+class FakeSpawn:
+    """Writes a session artifact per child, so requests have a real source."""
+
+    def __init__(self, requests: tuple[int, ...] = (1, 2, 3), exits: tuple[int, ...] = ()) -> None:
+        self.requests: Iterator[int] = iter(requests)
+        self.exits: Iterator[int] = iter(exits)
+        self.calls: list[tuple[list[str], Path, dict]] = []
+
+    def __call__(self, argv, cwd, env):
+        argv = list(argv)
+        self.calls.append((argv, Path(cwd), dict(env)))
+        session_id = argv[argv.index("--session-id") + 1]
+        session_dir = Path(argv[argv.index("--session-dir") + 1])
+        artifact = session_dir / "--fixture--" / f"2026-11-26T10-00-00Z_{session_id}.jsonl"
+        artifact.parent.mkdir(parents=True, exist_ok=True)
+        lines = [json.dumps({"type": "message", "message": {"role": "user"}})]
+        for _ in range(next(self.requests, 0)):
+            lines.append(json.dumps({"type": "message", "message": {"role": "assistant"}}))
+        artifact.write_text("\n".join(lines) + "\n")
+        return Handle(next(self.exits, 0))
 
 
 @dataclass
@@ -31,14 +64,17 @@ class Probes:
         2026, 11, 24, 14, 30, 5, tzinfo=timezone.utc
     )
     exists: Callable[[Path], bool] = lambda _: True
-    ticks: list[float] = field(default_factory=lambda: [100.0, 100.025])
+    ticks: list[float] = field(default_factory=list)
     monotonic: Callable[[], float] = lambda: 0.0
+    spawn: Callable = field(default_factory=FakeSpawn)
+    base_env: dict = field(default_factory=lambda: {"PATH": "/bin"})
 
 
 def run(tmp_path, *argv, probes=None):
     probes = probes or Probes()
     ticks = list(probes.ticks)
-    probes.monotonic = lambda: ticks.pop(0)
+    counter = itertools.count()
+    probes.monotonic = (lambda: ticks.pop(0)) if ticks else (lambda: next(counter))
     runs = tmp_path / "runs"
     code = cli.main(["eval", *argv], probes=probes, runs_root=runs, cwd=REPO)
     return code, probes, runs
@@ -71,12 +107,15 @@ def test_the_printed_resolution_matches_the_record(tmp_path, capsys) -> None:
 
 
 def test_model_requests_are_summed_and_the_clock_is_not(tmp_path: Path) -> None:
-    code, _, runs = run(tmp_path, "--suite", "basic")
+    probes = Probes(ticks=[100.0, 100.5, 101.0, 101.5, 102.0, 102.5, 103.0, 103.25])
+    code, _, runs = run(tmp_path, "--suite", "basic", probes=probes)
     assert code == 0
-    summary = json.loads((only_job(runs) / "run.json").read_text())
-    trials = load_trials(FIXTURES / "trials")
-    assert summary["model_requests"] == aggregate_requests(trials) == 10
-    assert summary["elapsed_seconds"] == 0.025
+    job = only_job(runs)
+    summary = json.loads((job / "run.json").read_text())
+    trials = read_trials(job)
+    assert summary["model_requests"] == aggregate_requests(trials) == 6
+    assert summary["model_requests"] not in {t["model_requests"] for t in trials}
+    assert summary["elapsed_seconds"] == 3.25
     assert summary["elapsed_seconds"] != sum(t["elapsed_seconds"] for t in trials)
 
 
@@ -164,11 +203,11 @@ def test_peer_range_is_read_from_the_manifest() -> None:
     assert cli.peer_range(REPO) == manifest["peerDependencies"]["@earendil-works/pi-coding-agent"]
 
 
-def test_counts_say_they_came_from_fixtures(tmp_path: Path) -> None:
+def test_counts_say_they_came_from_sessions(tmp_path: Path) -> None:
     code, _, runs = run(tmp_path, "--suite", "basic")
     assert code == 0
     summary = json.loads((only_job(runs) / "run.json").read_text())
-    assert summary["counts_source"] == "fixtures"
+    assert summary["counts_source"] == "sessions"
 
 
 def test_started_at_carries_the_stamp_not_its_first_field(tmp_path: Path) -> None:
@@ -237,7 +276,7 @@ def test_the_pinned_alias_lets_the_run_through(tmp_path: Path) -> None:
     assert code == 0
 
 
-def test_each_task_gets_a_prepared_trial_with_a_workspace(tmp_path: Path) -> None:
+def test_each_task_gets_a_trial_with_a_workspace_and_no_verdict(tmp_path: Path) -> None:
     code, _, runs = run(tmp_path, "--suite", "basic")
     assert code == 0
     job = only_job(runs)
@@ -245,17 +284,18 @@ def test_each_task_gets_a_prepared_trial_with_a_workspace(tmp_path: Path) -> Non
     assert [trial.name for trial in trials] == ["trial-01", "trial-02", "trial-03"]
     for trial in trials:
         record = json.loads((trial / "trial.json").read_text())
-        assert record["status"] == "prepared"
         assert record["task"].startswith("task-")
         assert (trial / "prompt.txt").is_file()
         assert (trial / "workspace").is_dir()
         assert not (trial / "verdict.json").exists()
+        assert "verdict" not in record
+        assert "score" not in record
 
 
-def test_the_run_says_it_only_prepared(tmp_path: Path) -> None:
+def test_the_run_says_its_sessions_ended(tmp_path: Path) -> None:
     code, _, runs = run(tmp_path, "--suite", "basic")
     summary = json.loads((only_job(runs) / "run.json").read_text())
-    assert summary["status"] == "prepared"
+    assert summary["status"] == "session-ended"
     assert summary["trials"] == 3
 
 
@@ -286,3 +326,99 @@ def test_a_preparation_failure_leaves_the_trial_record_and_no_summary(tmp_path: 
     assert not (job / "run.json").exists()
     record = json.loads((job / "trial-01" / "trial.json").read_text())
     assert record["status"] == "prepared"
+
+
+def test_each_trial_records_the_session_boundary(tmp_path: Path) -> None:
+    code, _, runs = run(tmp_path, "--suite", "basic")
+    assert code == 0
+    job = only_job(runs)
+    for trial in sorted(job.glob("trial-*")):
+        record = json.loads((trial / "trial.json").read_text())
+        assert record["status"] == "session-ended"
+        assert record["exit_status"] == 0
+        assert record["session_id"]
+        assert record["model_requests"] >= 1
+        assert (trial / "trajectory.jsonl").is_file()
+
+
+def test_the_child_runs_in_the_workspace_with_a_private_profile(tmp_path: Path) -> None:
+    code, probes, runs = run(tmp_path, "--suite", "basic")
+    assert code == 0
+    trial = only_job(runs) / "trial-01"
+    argv, cwd, env = probes.spawn.calls[0]
+    assert cwd == trial / "workspace"
+    assert env["PI_CODING_AGENT_DIR"] == str(trial / "agent")
+    profile = json.loads((trial / "agent" / "models.json").read_text())
+    assert profile["providers"]["satyrn"]["baseUrl"] == cli.DEFAULT_BASE_URL
+    assert argv[-1] == (trial / "prompt.txt").read_text().strip()
+
+
+def test_the_job_records_the_extension_order(tmp_path: Path) -> None:
+    code, _, runs = run(tmp_path, "--suite", "basic")
+    assert code == 0
+    job = json.loads((only_job(runs) / "job.json").read_text())
+    assert job["extensions"] == [str((FIXTURES / "worker-stub" / "worker.ts").resolve())]
+
+
+def test_a_running_trial_is_written_before_its_child_starts(tmp_path: Path) -> None:
+    seen: list[str] = []
+    probes = Probes()
+
+    def spawn(argv, cwd, env):
+        seen.append(json.loads((Path(cwd).parent / "trial.json").read_text())["status"])
+        return FakeSpawn()(argv, cwd, env)
+
+    probes.spawn = spawn
+    code, _, _ = run(tmp_path, "--suite", "basic", probes=probes)
+    assert code == 0
+    assert seen == ["running", "running", "running"]
+
+
+def test_a_failing_child_is_recorded_and_the_job_stops(tmp_path: Path) -> None:
+    probes = Probes(spawn=FakeSpawn(exits=(0, 4, 0)))
+    code, _, runs = run(tmp_path, "--suite", "basic", probes=probes)
+    assert code == 2
+    job = only_job(runs)
+    failing = json.loads((job / "trial-02" / "trial.json").read_text())
+    assert failing["status"] == "session-ended"
+    assert failing["exit_status"] == 4
+    summary = json.loads((job / "run.json").read_text())
+    assert summary["status"] == "session-ended"
+    assert summary["failures"] == 1
+    assert summary["exit_status"] == 2
+
+
+def test_a_missing_worker_entry_stops_before_a_job_directory(tmp_path: Path) -> None:
+    worker = tmp_path / "worker"
+    worker.mkdir()
+    (worker / "package.json").write_text(
+        json.dumps(
+            {"name": "w", "version": "0.0.1", "satyrn": {"worker": "./gone.ts"}}
+        )
+    )
+    code, _, runs = run(tmp_path, "--suite", "basic", "--worker", str(worker))
+    assert code == 2
+    assert not runs.exists()
+
+
+def test_a_silent_failure_still_names_the_trial_and_its_status(
+    tmp_path: Path, capsys
+) -> None:
+    probes = Probes(spawn=FakeSpawn(exits=(0, 4, 0)))
+    run(tmp_path, "--suite", "basic", probes=probes)
+    printed = capsys.readouterr().err
+    assert "trial-02" in printed
+    assert "4" in printed
+
+
+def test_every_trial_shares_one_session_directory_with_its_own_id(
+    tmp_path: Path,
+) -> None:
+    probes = Probes()
+    run(tmp_path, "--suite", "basic", probes=probes)
+    calls = probes.spawn.calls
+    directories = {call[0][call[0].index("--session-dir") + 1] for call in calls}
+    identifiers = {call[0][call[0].index("--session-id") + 1] for call in calls}
+    assert len(directories) == 1
+    assert directories.pop().endswith("/sessions")
+    assert len(identifiers) == len(calls) == 3

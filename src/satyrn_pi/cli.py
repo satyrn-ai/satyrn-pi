@@ -15,17 +15,18 @@ from pathlib import Path
 from typing import Sequence
 
 from . import __version__
+from . import session
 from .records import (
     aggregate_requests,
     job_id,
     job_path,
-    load_trials,
+    read_trials,
     write_job,
     write_run,
 )
 from .resolve import ResolutionError, resolve_pi, resolve_suite, resolve_worker
 from .trial import write_trial
-from .workspace import WorkspaceError, prepare
+from .workspace import PROMPT_NAME, WorkspaceError, prepare
 
 CLI_VERSION = __version__
 DEFAULT_BASE_URL = "http://127.0.0.1:8001/v1"
@@ -96,9 +97,9 @@ def main(argv: Sequence[str], *, probes, runs_root: Path, cwd: Path) -> int:
             f"(it lists: {listed}); this is not the pinned llama-server"
         )
 
-    trials = load_trials(Path(probes.suite_root) / "trials")
     identifier = job_id(probes.now())
     path = job_path(Path(runs_root), suite, identifier)
+    extension = (Path(worker.path) / worker.entry).resolve()
 
     write_job(
         path,
@@ -118,13 +119,16 @@ def main(argv: Sequence[str], *, probes, runs_root: Path, cwd: Path) -> int:
             "pi_source": pi.source,
             "model": DEFAULT_MODEL,
             "base_url": args.base_url,
+            "extensions": [str(extension)],
             "started_at": identifier.rsplit("-", 1)[0],
         },
     )
 
-    prepared = 0
+    sessions = path / "sessions"
+    failures = 0
     for index, task in enumerate(suite.tasks, start=1):
         trial = path / f"trial-{index:02d}"
+        session_id = f"{identifier}-trial-{index:02d}"
         write_trial(
             trial,
             {
@@ -137,21 +141,57 @@ def main(argv: Sequence[str], *, probes, runs_root: Path, cwd: Path) -> int:
             },
         )
         try:
-            prepare(task, suite_root / f"suite-{suite.name}", trial)
+            workspace = prepare(task, suite_root / f"suite-{suite.name}", trial)
         except WorkspaceError as error:
             return _fail(str(error))
-        prepared += 1
 
+        write_trial(trial, {"status": "running", "session_id": session_id})
+        agent_dir = trial / "agent"
+        session.write_agent_profile(agent_dir, base_url=args.base_url, model=DEFAULT_MODEL)
+        outcome = session.run_session(
+            binary=pi.path,
+            trial=trial,
+            workspace=workspace,
+            prompt=(trial / PROMPT_NAME).read_text().strip(),
+            session_id=session_id,
+            session_dir=sessions,
+            agent_dir=agent_dir,
+            extensions=[extension],
+            model=DEFAULT_MODEL,
+            base_env=probes.base_env,
+            spawn=probes.spawn,
+            clock=probes.monotonic,
+        )
+        write_trial(
+            trial,
+            {
+                "status": "session-ended",
+                "exit_status": outcome.exit_status,
+                "elapsed_seconds": outcome.elapsed_seconds,
+                "model_requests": outcome.model_requests,
+                "trajectory": session.TRAJECTORY_NAME if outcome.trajectory else None,
+            },
+        )
+        if outcome.exit_status != 0:
+            failures += 1
+            print(f"{trial.name}: Pi exited with status {outcome.exit_status}", file=sys.stderr)
+            if outcome.stderr.strip():
+                print(outcome.stderr.strip()[-400:], file=sys.stderr)
+
+    records = read_trials(path)
+    requests = aggregate_requests(records)
     elapsed = round(probes.monotonic() - started, 3)
+    exit_status = OK if failures == 0 else STOPPED
     write_run(
         path,
         {
-            "status": "prepared",
-            "trials": prepared,
-            "model_requests": aggregate_requests(trials),
+            "status": "session-ended",
+            "trials": len(records),
+            "failures": failures,
+            "model_requests": requests,
             "elapsed_seconds": elapsed,
-            "counts_source": "fixtures",
-            "exit_status": OK,
+            "counts_source": "sessions",
+            "exit_status": exit_status,
         },
     )
 
@@ -159,8 +199,9 @@ def main(argv: Sequence[str], *, probes, runs_root: Path, cwd: Path) -> int:
     print(f"pi       {pi.version} ({'verified' if pi.verified else 'unverified'}, {pi.source})")
     print(f"suite    {suite.name} {suite.version}, {len(suite.tasks)} tasks")
     print(f"server   {args.base_url}")
+    print(f"sessions {len(records)} ended, {failures} failed, {requests} model requests")
     print(f"records  {path}")
-    return OK
+    return exit_status
 
 
 def installed_worker() -> Path | None:
@@ -232,6 +273,31 @@ def server_health(base_url: str) -> bool:
         return False
 
 
+class RealProcess:
+    """The one place a child is started. Its own session group is P5.4's to kill."""
+
+    def __init__(self, argv, cwd: Path, env) -> None:
+        import subprocess
+
+        self._process = subprocess.Popen(
+            list(argv),
+            cwd=str(cwd),
+            env=dict(env),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            start_new_session=True,
+        )
+
+    def communicate(self, timeout: float | None = None) -> tuple[str, str]:
+        return self._process.communicate(timeout=timeout)
+
+    @property
+    def exit_status(self) -> int:
+        return int(self._process.returncode)
+
+
 class RealProbes:
     """The probes a real run uses. Each one is still just an attribute."""
 
@@ -254,6 +320,8 @@ class RealProbes:
         self.now = lambda: datetime.now(timezone.utc)
         self.monotonic = time.monotonic
         self.exists = lambda path: Path(path).is_file()
+        self.spawn = RealProcess
+        self.base_env = dict(os.environ)
 
 
 def run() -> int:
