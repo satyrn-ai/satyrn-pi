@@ -2,6 +2,9 @@
 requires = ["uv_build>=0.11.6,<0.12"]
 build-backend = "uv_build"
 
+[project.scripts]
+satyrn-pi = "satyrn_pi.cli:run"
+
 [project]
 name = "satyrn-pi"
 version = "0.1.0"

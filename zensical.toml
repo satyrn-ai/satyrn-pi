@@ -16,6 +16,7 @@ strict = true
 # fails when the two disagree.
 exclude_docs = """
 domain.md
+eval-cli.md
 pathologies.md
 rules-applicability.md
 sdd.md
