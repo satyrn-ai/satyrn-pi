@@ -235,3 +235,17 @@ def test_the_stub_suite_is_one_task_for_an_end_to_end_run() -> None:
     suite = resolve_suite("stub", FIXTURES)
     assert [task["id"] for task in suite.tasks] == ["task-stub"]
     assert suite.tasks[0]["fixture"] == "fixtures/task-stub"
+
+
+@pytest.mark.parametrize("entry", ["../outside.ts", "/etc/passwd"])
+def test_a_worker_entry_outside_the_directory_is_refused(
+    tmp_path: Path, entry: str
+) -> None:
+    (tmp_path / "outside.ts").write_text("export default function () {}\n")
+    worker = tmp_path / "worker"
+    worker.mkdir()
+    (worker / "package.json").write_text(
+        json.dumps({"name": "w", "version": "0.0.1", "satyrn": {"worker": entry}})
+    )
+    with pytest.raises(ResolutionError):
+        resolve_worker(worker, lambda: None)

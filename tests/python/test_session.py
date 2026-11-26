@@ -16,7 +16,6 @@ RECORDER = Path("/w/recorder.ts")
 def argv(**overrides):
     values = dict(
         binary=Path("/p/pi"),
-        workspace=Path("/t/workspace"),
         prompt="Do the thing.",
         session_id="job-01",
         session_dir=Path("/j/sessions"),
@@ -37,7 +36,7 @@ def test_the_prompt_is_last_and_fenced_from_options() -> None:
     assert built[-2:] == ["--", "-- not an option"]
 
 
-def test_session_id_and_directory_are_shared_across_the_job() -> None:
+def test_the_argv_carries_the_session_id_and_the_shared_directory() -> None:
     built = argv()
     assert built[built.index("--session-id") + 1] == "job-01"
     assert built[built.index("--session-dir") + 1] == "/j/sessions"
@@ -115,9 +114,15 @@ def test_the_profile_makes_the_model_the_default(tmp_path: Path) -> None:
 class Handle:
     """A spawned child, as `run_session` sees one."""
 
-    def __init__(self, returncode: int = 0, writes: Path | None = None) -> None:
+    def __init__(
+        self,
+        returncode: int = 0,
+        writes: Path | None = None,
+        stdout: str = "",
+    ) -> None:
         self.exit_status = returncode
         self._writes = writes
+        self._stdout = stdout
         self.calls: list[tuple] = []
 
     def communicate(self, timeout: float | None = None) -> tuple[str, str]:
@@ -136,7 +141,7 @@ class Handle:
                 )
                 + "\n"
             )
-        return "", ""
+        return self._stdout, ""
 
 
 def run(tmp_path: Path, handle: Handle, **overrides):
@@ -188,7 +193,7 @@ def test_the_session_artifact_is_copied_beside_the_trial(tmp_path: Path) -> None
 
 def test_requests_are_counted_from_the_artifact_not_the_output(tmp_path: Path) -> None:
     artifact = tmp_path / "sessions" / "--t--" / "stamp_job-01.jsonl"
-    outcome, _ = run(tmp_path, Handle(writes=artifact))
+    outcome, _ = run(tmp_path, Handle(writes=artifact, stdout="999\n"))
     assert outcome.model_requests == 2
 
 
@@ -220,3 +225,13 @@ def test_the_stderr_tail_comes_back_for_a_failure(tmp_path: Path) -> None:
 def test_every_extension_reaches_the_child(tmp_path: Path, extension: Path) -> None:
     _, spawned = run(tmp_path, Handle(), extensions=[extension])
     assert str(extension) in spawned[0][0]
+
+
+@pytest.mark.parametrize("line", ["null", "[]", "7", '"text"', "true"])
+def test_a_valid_json_non_object_does_not_stop_the_count(tmp_path: Path, line: str) -> None:
+    artifact = tmp_path / "sessions" / "stamp_job-01.jsonl"
+    artifact.parent.mkdir(parents=True)
+    artifact.write_text(
+        line + "\n" + json.dumps({"type": "message", "message": {"role": "assistant"}}) + "\n"
+    )
+    assert session.count_requests(artifact) == 1

@@ -34,7 +34,6 @@ class Outcome:
 def session_argv(
     *,
     binary: Path,
-    workspace: Path,
     prompt: str,
     session_id: str,
     session_dir: Path,
@@ -141,7 +140,7 @@ def count_requests(trajectory: Path) -> int:
             entry = json.loads(line)
         except json.JSONDecodeError:
             continue
-        if entry.get("type") != "message":
+        if not isinstance(entry, Mapping) or entry.get("type") != "message":
             continue
         message = entry.get("message")
         if isinstance(message, Mapping) and message.get("role") == "assistant":
@@ -167,7 +166,6 @@ def run_session(
     """Spawn one child, wait for it, and turn its remains into an `Outcome`."""
     argv = session_argv(
         binary=binary,
-        workspace=workspace,
         prompt=prompt,
         session_id=session_id,
         session_dir=session_dir,
