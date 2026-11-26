@@ -43,3 +43,12 @@
   verified file, serving `127.0.0.1:8001` with the preserved flags, answering a
   request, and recording the allocation the server reports beside the footprint
   the process actually holds.
+- Publish Getting Started as the site's third page: five numbered steps from the
+  recorded walk, the pinned digests, the two macOS failures and an occupied port
+  named where they happen, and a closing section that says the worker is not
+  published yet. A drift check fails when the page and the reference card
+  disagree about a pin.
+- Retire the backlog entry asking for the site check to be required on `main`:
+  the ruleset now requires a pull request and the default-suite check, so the
+  condition it named is met and the format says to delete rather than archive.
+  Reopen the accessibility-statement entry, whose condition this page meets.
