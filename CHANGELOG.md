@@ -54,6 +54,9 @@
   Reopen the accessibility-statement entry, whose condition this page meets.
 - Split phase 5 into four stacked cycles, P5.1 to P5.4: resolution and records
   proved with fixtures, workspace preparation, the Pi child, then its deadline.
+- Bound each trial's Pi session with a deadline: the child runs in its own process
+  group, a fired deadline kills the group, and the trial is recorded as `stopped`
+  rather than failed — with no verdict, and no further trials started.
 - Start each trial's Pi child in print mode: the prepared workspace as its working
   directory, closed stdin, a private agent directory, a shared session directory,
   explicit extensions in load order, and `session-ended` recorded with the

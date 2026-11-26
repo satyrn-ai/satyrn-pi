@@ -20,6 +20,10 @@ MAX_TOKENS = 16384
 SAMPLING = {"temperature": 1.0, "top_p": 0.95, "top_k": 20}
 
 
+class TimedOut(RuntimeError):
+    """The child outlived its deadline. The adapter raises this, not `subprocess`."""
+
+
 @dataclass(frozen=True)
 class Outcome:
     """What a finished child leaves: its status, its clock and its artifact."""
@@ -29,6 +33,7 @@ class Outcome:
     model_requests: int
     trajectory: Path | None
     stderr: str
+    stopped: bool = False
 
 
 def session_argv(
@@ -163,11 +168,14 @@ def run_session(
     base_env: Mapping[str, str],
     spawn: Callable[[Sequence[str], Path, Mapping[str, str]], object],
     clock: Callable[[], float],
+    deadline: float,
 ) -> Outcome:
-    """Spawn one child, wait for it, and turn its remains into an `Outcome`.
+    """Spawn one child, wait for it within `deadline`, and record what remains.
 
-    An interrupt kills the child's process group and reaps it before the
-    exception continues, so no descendant outlives the run that started it.
+    A fired deadline kills the group the child started in, reaps it, and reports
+    `stopped`; the span is measured from the same start, so the clock is not
+    restarted to make the kill look quick. An interrupt kills the group and reaps
+    it too, then re-raises, so no descendant outlives the run.
     """
     argv = session_argv(
         binary=binary,
@@ -179,8 +187,13 @@ def run_session(
     )
     started = clock()
     handle = spawn(argv, Path(workspace), session_env(base_env, agent_dir=agent_dir))
+    stopped = False
     try:
+        _, stderr = handle.communicate(timeout=deadline)
+    except TimedOut:
+        handle.kill_group()
         _, stderr = handle.communicate()
+        stopped = True
     except KeyboardInterrupt:
         handle.kill_group()
         handle.communicate()
@@ -193,4 +206,5 @@ def run_session(
         model_requests=count_requests(trajectory) if trajectory else 0,
         trajectory=trajectory,
         stderr=stderr or "",
+        stopped=stopped,
     )

@@ -31,6 +31,7 @@ from .workspace import PROMPT_NAME, WorkspaceError, prepare
 CLI_VERSION = __version__
 DEFAULT_BASE_URL = "http://127.0.0.1:8001/v1"
 DEFAULT_MODEL = "Mellum2.1-12B-A2.5B-Thinking"
+DEFAULT_DEADLINE_SECONDS = 300.0
 PEER_PACKAGE = "@earendil-works/pi-coding-agent"
 
 OK = 0
@@ -55,6 +56,12 @@ def _parser() -> argparse.ArgumentParser:
     evaluate.add_argument("--suite", required=True, help="suite name, e.g. basic")
     evaluate.add_argument("--worker", type=Path, default=None, help="explicit worker path")
     evaluate.add_argument("--base-url", default=DEFAULT_BASE_URL, help="OpenAI-compatible base")
+    evaluate.add_argument(
+        "--deadline",
+        type=float,
+        default=DEFAULT_DEADLINE_SECONDS,
+        help="seconds one Pi session may run before its process group is killed",
+    )
     return parser
 
 
@@ -71,6 +78,8 @@ def main(argv: Sequence[str], *, probes, runs_root: Path, cwd: Path) -> int:
 
     if args.command != "eval":
         return _fail("no subcommand: expected eval")
+    if args.deadline <= 0:
+        return _fail(f"--deadline must be positive seconds, not {args.deadline:g}")
 
     started = probes.monotonic()
     try:
@@ -125,12 +134,14 @@ def main(argv: Sequence[str], *, probes, runs_root: Path, cwd: Path) -> int:
             "model": DEFAULT_MODEL,
             "base_url": args.base_url,
             "extensions": [str(extension)],
+            "deadline_seconds": args.deadline,
             "started_at": identifier.rsplit("-", 1)[0],
         },
     )
 
     sessions = path / "sessions"
     failures = 0
+    stopped = 0
     for index, task in enumerate(suite.tasks, start=1):
         trial = path / f"trial-{index:02d}"
         session_id = f"{identifier}-trial-{index:02d}"
@@ -166,17 +177,25 @@ def main(argv: Sequence[str], *, probes, runs_root: Path, cwd: Path) -> int:
             base_env=probes.base_env,
             spawn=probes.spawn,
             clock=probes.monotonic,
+            deadline=args.deadline,
         )
-        write_trial(
-            trial,
-            {
-                "status": "session-ended",
-                "exit_status": outcome.exit_status,
-                "elapsed_seconds": outcome.elapsed_seconds,
-                "model_requests": outcome.model_requests,
-                "trajectory": session.TRAJECTORY_NAME if outcome.trajectory else None,
-            },
-        )
+        record: dict[str, object] = {
+            "status": "stopped" if outcome.stopped else "session-ended",
+            "exit_status": outcome.exit_status,
+            "elapsed_seconds": outcome.elapsed_seconds,
+            "model_requests": outcome.model_requests,
+            "trajectory": session.TRAJECTORY_NAME if outcome.trajectory else None,
+        }
+        if outcome.stopped:
+            record["stopped_by"] = "deadline"
+        write_trial(trial, record)
+        if outcome.stopped:
+            stopped += 1
+            print(
+                f"{trial.name} stopped after {args.deadline:g}s; no further trials started",
+                file=sys.stderr,
+            )
+            break
         if outcome.exit_status != 0:
             failures += 1
             print(f"{trial.name}: Pi exited with status {outcome.exit_status}", file=sys.stderr)
@@ -186,13 +205,14 @@ def main(argv: Sequence[str], *, probes, runs_root: Path, cwd: Path) -> int:
     records = read_trials(path)
     requests = aggregate_requests(records)
     elapsed = round(probes.monotonic() - started, 3)
-    exit_status = OK if failures == 0 else STOPPED
+    exit_status = OK if failures == 0 and stopped == 0 else STOPPED
     write_run(
         path,
         {
-            "status": "session-ended",
+            "status": "stopped" if stopped else "session-ended",
             "trials": len(records),
             "failures": failures,
+            "stopped": stopped,
             "model_requests": requests,
             "elapsed_seconds": elapsed,
             "counts_source": "sessions",
@@ -200,7 +220,10 @@ def main(argv: Sequence[str], *, probes, runs_root: Path, cwd: Path) -> int:
         },
     )
 
-    print(f"sessions {len(records)} ended, {failures} failed, {requests} model requests")
+    print(
+        f"sessions {len(records)} ended, {failures} failed, {stopped} stopped, "
+        f"{requests} model requests"
+    )
     print(f"records  {path}")
     return exit_status
 
@@ -305,7 +328,7 @@ def kill_group(pid: int) -> None:
 
 
 class RealProcess:
-    """The one place a child is started. It leads its own session, so an interrupt can kill the group by pid."""
+    """The one place a child is started. It leads its own session, so the deadline and an interrupt kill the group by pid."""
 
     def __init__(self, argv, cwd: Path, env) -> None:
         import subprocess
@@ -322,11 +345,23 @@ class RealProcess:
         )
 
     def communicate(self, timeout: float | None = None) -> tuple[str, str]:
-        return self._process.communicate(timeout=timeout)
+        """Wait, translating the child's timeout into the boundary's own signal."""
+        import subprocess
+
+        try:
+            return self._process.communicate(timeout=timeout)
+        except subprocess.TimeoutExpired as error:
+            raise session.TimedOut() from error
 
     def kill_group(self) -> None:
         """Kill everything the child started, not only the child."""
-        kill_group(self._process.pid)
+        import os
+        import signal
+
+        try:
+            os.killpg(os.getpgid(self._process.pid), signal.SIGKILL)
+        except ProcessLookupError:
+            pass
 
     @property
     def exit_status(self) -> int:
