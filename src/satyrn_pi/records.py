@@ -27,10 +27,11 @@ def job_path(runs: Path, suite: Suite, identifier: str) -> Path:
     return Path(runs) / f"{day}-{suite.name}" / identifier
 
 
-def load_trials(directory: Path) -> list[Mapping[str, object]]:
+def read_trials(job: Path) -> list[Mapping[str, object]]:
+    """The trial records this job wrote, in trial order, as the source of its counts."""
     return [
         json.loads(path.read_text())
-        for path in sorted(Path(directory).glob("*.json"))
+        for path in sorted(Path(job).glob("trial-*/trial.json"))
     ]
 
 

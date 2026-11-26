@@ -1,0 +1,12 @@
+{
+  "name": "stub",
+  "version": "0.0.1",
+  "tasks": [
+    {
+      "id": "task-stub",
+      "instructions": "Add a module docstring to app.py that says what the module does. Change nothing else.",
+      "fixture": "fixtures/task-stub",
+      "verification": "app.py imports and its first statement is a docstring."
+    }
+  ]
+}

@@ -54,6 +54,10 @@
   Reopen the accessibility-statement entry, whose condition this page meets.
 - Split phase 5 into four stacked cycles, P5.1 to P5.4: resolution and records
   proved with fixtures, workspace preparation, the Pi child, then its deadline.
+- Start each trial's Pi child in print mode: the prepared workspace as its working
+  directory, closed stdin, a private agent directory, a shared session directory,
+  explicit extensions in load order, and `session-ended` recorded with the
+  trajectory and the model requests it really made.
 - Prepare each trial's workspace from its fixture: base, variant overlay and
   deletions, the prompt written beside the tree rather than inside it, and
   `trial.json` at `prepared` — a status that cannot be mistaken for a result.
