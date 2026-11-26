@@ -16,8 +16,11 @@ says what is being built.
 
 - An Apple silicon Mac. This page covers `arm64` only; Linux, CUDA and Windows are
   untested, and their builds use different flags.
-- About 8 GB of free disk for the weights, and roughly 8 GB of memory the system
-  can reach while the model runs.
+- About 8 GB of free disk for the weights, and 16 GB of memory. The weights are
+  8.1 GB of mapped file, so the server's own footprint reads as under a gigabyte
+  while the machine still has to hold the file: `ps` reports about 8 GB resident.
+  A 16 GB laptop that ran it used 8.5 GB and swapped, so treat 16 GB as the minimum
+  rather than a comfortable margin.
 - A terminal, and `curl`.
 
 Paths below are examples. This page uses `~/.local/share/satyrn-llama` for the
@@ -64,9 +67,12 @@ xattr -d com.apple.quarantine llama-b12066-bin-macos-arm64.tar.gz
 ## 2. Get the weights
 
 The file is Q4_K_M, and it is fetched at a pinned revision. The quantisation name
-alone is not a pin: the file behind that name can be replaced.
+alone is not a pin: the file behind that name can be replaced. Create the
+directory first — `curl -o` will not create it, and the download fails on the
+line you just copied if it is missing.
 
 ```sh
+mkdir -p ~/models
 curl -sSL -o ~/models/Mellum2.1-12B-A2.5B-Thinking-Q4_K_M.gguf \
   https://huggingface.co/JetBrains/Mellum2.1-12B-A2.5B-Thinking-GGUF/resolve/4159d684ffdb09ba89dc2a58feb3e75c54eef036/Mellum2.1-12B-A2.5B-Thinking-Q4_K_M.gguf
 shasum -a 256 ~/models/Mellum2.1-12B-A2.5B-Thinking-Q4_K_M.gguf
@@ -130,12 +136,16 @@ describes. If the path is somewhere else, or the build number differs, it does n
 ```sh
 curl -s http://127.0.0.1:8001/v1/chat/completions \
   -H 'Content-Type: application/json' \
-  -d '{"model":"Mellum2.1-12B-A2.5B-Thinking","messages":[{"role":"user","content":"In one sentence, what does a bounded coding worker do?"}],"max_tokens":256,"temperature":1.0,"top_p":0.95,"top_k":20}'
+  -d '{"model":"Mellum2.1-12B-A2.5B-Thinking","messages":[{"role":"user","content":"In one sentence, what does a bounded coding worker do?"}],"max_tokens":1024,"temperature":1.0,"top_p":0.95,"top_k":20}'
 ```
 
 You get JSON with a `reasoning_content` field and a `content` field: the model
-thinks first, then answers. When you are done, `Ctrl-C` in the serving terminal,
-and `lsof -nP -iTCP:8001 -sTCP:LISTEN` should print nothing.
+thinks first, then answers. The thinking is billed against the same
+`max_tokens`, so leave room for the answer — at 256 the model sometimes spent
+the whole budget thinking and returned `finish_reason: "length"` with an empty
+`content`. If you see that, raise `max_tokens` rather than doubting the server.
+When you are done, `Ctrl-C` in the serving terminal, and
+`lsof -nP -iTCP:8001 -sTCP:LISTEN` should print nothing.
 
 ## What you have now
 

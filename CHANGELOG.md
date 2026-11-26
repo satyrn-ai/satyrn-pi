@@ -52,3 +52,7 @@
   the ruleset now requires a pull request and the default-suite check, so the
   condition it named is met and the format says to delete rather than archive.
   Reopen the accessibility-statement entry, whose condition this page meets.
+- Getting Started creates `~/models` before downloading into it, states a 16 GB
+  memory minimum drawn from two observed machines, and leaves room in
+  `max_tokens` for an answer after the model's reasoning; a check now fails any
+  page that writes into a directory it never creates.
