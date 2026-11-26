@@ -43,5 +43,5 @@
   verified file, serving `127.0.0.1:8001` with the preserved flags, answering a
   request, and recording the allocation the server reports beside the footprint
   the process actually holds.
-- Split phase 5 into two stacked cycles, P5.1 to P5.2: resolution and records
-  proved with fixtures, then the Pi child with its workspace and deadline.
+- Split phase 5 into four stacked cycles, P5.1 to P5.4: resolution and records
+  proved with fixtures, workspace preparation, the Pi child, then its deadline.
