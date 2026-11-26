@@ -45,6 +45,9 @@
   the process actually holds.
 - Split phase 5 into four stacked cycles, P5.1 to P5.4: resolution and records
   proved with fixtures, workspace preparation, the Pi child, then its deadline.
+- Prepare each trial's workspace from its fixture: base, variant overlay and
+  deletions, the prompt written beside the tree rather than inside it, and
+  `trial.json` at `prepared` — a status that cannot be mistaken for a result.
 - Add `satyrn-pi eval`: worker, Pi, suite and server resolved and printed, a
   preflight health check that stops before any record exists, `job.json` and
   `run.json` under `runs/`, and the counting rules — proven with fixtures, no
