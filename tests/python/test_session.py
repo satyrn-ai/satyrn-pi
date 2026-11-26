@@ -253,3 +253,7 @@ def test_an_interrupt_kills_the_group_and_reaps_the_child(tmp_path: Path) -> Non
         run(tmp_path, handle)
     assert handle.killed == 1
     assert [call[0] for call in handle.calls] == ["communicate", "communicate"]
+
+
+def test_skills_are_disabled_so_the_subject_loads_none() -> None:
+    assert "--no-skills" in argv()

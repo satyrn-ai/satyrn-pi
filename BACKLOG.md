@@ -44,3 +44,15 @@ kept. An empty backlog is valid — do not invent entries to fill this file.
   installer walkthrough.
 - **Links:** [P5.3 plan](docs/superpowers/plans/2026-11-24-p5.3-pi-child.md),
   `version_beside` in `src/satyrn_pi/cli.py`
+
+### Real-child skill check
+
+- **Area:** the eval CLI, from P5.3
+- **Deferred:** a unit test pins `--no-skills` in the child's argv, but it cannot
+  prove that a real Pi 1.5.2 loads nothing: the default suites ban subprocess and
+  Pi is a peer dependency, so CI has no Pi to run. Spawning a child in a fresh
+  private agent directory and reading what loaded needs a path the suites can run.
+- **Reopen when:** the default suites gain a marked integration path, or Pi stops
+  being a peer dependency.
+- **Links:** [P5.0 spec](docs/superpowers/specs/2026-11-24-p5.0-eval-cli-design.md),
+  [P5.3 plan](docs/superpowers/plans/2026-11-24-p5.3-pi-child.md)

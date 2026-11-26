@@ -42,14 +42,15 @@ def session_argv(
 ) -> list[str]:
     """Print mode, a fixed provider and model, explicit extensions, then the prompt.
 
-    Discovery is off and every extension is named, so the list the job records is
-    the list that loaded. The prompt arrives as an argument, never as a file the
+    Discovery is off, for skills as for extensions, and every extension is named,
+    so the list the job records is the list that loaded. The prompt arrives as an argument, never as a file the
     agent could read from its workspace.
     """
     argv = [
         str(binary),
         "--print",
         "--no-extensions",
+        "--no-skills",
         "--provider",
         PROVIDER,
         "--model",
