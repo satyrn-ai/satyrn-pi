@@ -82,9 +82,16 @@ contents and the counting rules — are settled in the
 
 ## Phase 6 — Suites
 
+The phase's shared calls — the four cycles, the fixture copy, the grading seam,
+grade identity and the primary grade — are settled in the
+[P6.0 spec](docs/superpowers/specs/2026-11-26-p6.0-suites-and-grading-design.md).
+
 | Cycle | Ships | Excludes | Status |
 | --- | --- | --- | --- |
-| **P6.1** | Preserved Easy/Medium/Hard fixtures and expectations, rewritten grading, witness qualification, grade identity and score provenance. Easy's four-check inherited grade remains primary. One scoring/evidence guide distinguishes failed or unrun tests, grader access, feedback and evidence strength. Qualify expected/observed feedback separately from the oracle grade, using [Andre's supplement](docs/superpowers/research/2026-11-16-upstream-acceptance-feedback.md). See [grading](docs/superpowers/research/2026-11-16-grading-compatibility.md). | Silently correcting historical grades; merging gate-message versions; enabling a settle/redispatch remedy; Education challenge UI. | proposed — after P5.1; qualify verdicts and feedback before trusting a model score or later gate. |
+| **P6.1** | Suite data: the Easy, Medium and Hard fixtures, prompts, `expected.json`, `layout.json` and graders copied byte-verbatim from `mellum-worker` `0e4a9b68` into `src/satyrn_pi/suites/`, with `SOURCES.json` recording each file's source path, commit and SHA-256 and a test recomputing them; a loader that refuses a duplicated expected ID, an ID whose grader module is absent, an ID outside the `grader_tests/` prefix, or an entry set that differs from the file set; the repository-weight budget raised to 320 files and 2.5 MB, with its reason. | Grading; any child process; a verdict; the source's layout, leak and contamination markers. | proposed — after P5.1 lands; the copy cannot fit the current weight budget. |
+| **P6.2** | Grading: the `grade(workspace, suite, *, runner)` seam, with a stub runner in the default suite and the real adapter beside `RealProcess`; the grader copied to `grader_tests/` after the session; `-rA` parsing with `checksRan`; `verdict.json` with per-check results, grade identity and the primary flag; the trial reaching `graded`; the `run.json` summary. | Witness qualification; corrected grades; the guide. | proposed — stacked on P6.1. |
+| **P6.3** | Witness qualification: `witnesses.json` per suite giving each copied known-good and known-broken tree's expected per-check outcome, the gaps the inherited grade accepts written down rather than fixed, one marked integration test that runs real pytest and is skipped by default, and the qualification record with its command, tails and hashes. | Correcting the inherited grade's semantics; a model run; CI running the marked test. | proposed — stacked on P6.2. |
+| **P6.4** | Feedback and the guide: expected/observed feedback under its own rule version, re-earned from `3e20e161` with the wrong-favicon and route-only-ID witnesses and recorded apart from the grade's `0e4a9b68`; `docs/scoring-and-evidence.md`; glossary entries for grade, verdict and witness. | Redispatch or settle gates; merging gate-message versions; the Education challenge UI; a measured rate. | proposed — stacked on P6.3. |
 
 ## Phase 7 — Vanilla
 
