@@ -254,12 +254,13 @@ def test_the_deadline_reaches_the_child(tmp_path: Path) -> None:
     assert handle.calls == [("communicate", 12.5)]
 
 
-def test_a_fired_deadline_kills_the_group_and_says_so(tmp_path: Path) -> None:
+def test_a_fired_deadline_kills_the_group_and_reaps_the_child(tmp_path: Path) -> None:
     handle = Handle(outlives_the_deadline=True)
     outcome, _ = run(tmp_path, handle)
     assert outcome.stopped is True
     assert handle.killed == 1
     assert outcome.exit_status == -9
+    assert handle.calls == [("communicate", 300.0), ("communicate", None)]
 
 
 def test_a_clean_run_is_not_stopped(tmp_path: Path) -> None:

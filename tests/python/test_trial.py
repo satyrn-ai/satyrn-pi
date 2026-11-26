@@ -43,9 +43,19 @@ def test_replacing_a_status_keeps_the_earlier_fields(tmp_path: Path) -> None:
     assert written["status"] == "running"
 
 
-def test_only_graded_and_stopped_are_final() -> None:
-    assert FINAL == ("graded", "stopped")
-    assert set(STATUSES) - set(FINAL) == {"prepared", "running", "session-ended"}
+@pytest.mark.parametrize("status", ["stopped", "graded"])
+def test_a_final_trial_cannot_be_reopened(tmp_path: Path, status: str) -> None:
+    write_trial(tmp_path, {"task": "task-01", "status": status})
+    with pytest.raises(ValueError):
+        write_trial(tmp_path, {"status": "running"})
+
+
+def test_a_final_trial_can_be_rewritten_at_the_same_status(tmp_path: Path) -> None:
+    write_trial(tmp_path, {"task": "task-01", "status": "stopped"})
+    write_trial(tmp_path, {"stopped_by": "deadline"})
+    written = json.loads((tmp_path / "trial.json").read_text())
+    assert written["status"] == "stopped"
+    assert written["stopped_by"] == "deadline"
 
 
 def test_a_trial_left_at_prepared_is_a_status_not_a_failure(tmp_path: Path) -> None:

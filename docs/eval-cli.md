@@ -84,8 +84,9 @@ further says `prepared` rather than looking like a result. `running` is written
 before the spawn and `session-ended` or `stopped` after it, so a kill in between
 leaves an honest record. The statuses are a closed set — `prepared`, `running`,
 `session-ended`, `graded`, `stopped` — and `write_trial` refuses anything else.
-Only `graded` and `stopped` are final, and only `graded` may carry a verdict or a
-score: a stopped trial never looks like a judged one.
+Only `graded` and `stopped` are final, a final record cannot be reopened, and only
+`graded` may carry a verdict or a score: a stopped trial never looks like a judged
+one.
 
 ## The deadline
 

@@ -417,7 +417,6 @@ def test_a_missing_worker_entry_stops_before_a_job_directory(tmp_path: Path) -> 
     assert not runs.exists()
 
 
-<<<<<<< HEAD
 def test_a_silent_failure_still_names_the_trial_and_its_status(
     tmp_path: Path, capsys
 ) -> None:
@@ -439,15 +438,25 @@ def test_every_trial_shares_one_session_directory_with_its_own_id(
     assert len(directories) == 1
     assert directories.pop().endswith("/sessions")
     assert len(identifiers) == len(calls) == 3
-=======
-def test_the_deadline_is_recorded_before_anything_runs(tmp_path: Path) -> None:
-    code, _, runs = run(tmp_path, "--suite", "basic", "--deadline", "42")
+
+
+def test_the_deadline_is_recorded_before_the_first_child_starts(tmp_path: Path) -> None:
+    recorded: list[float] = []
+    inner = FakeSpawn()
+    probes = Probes()
+
+    def spawn(argv, cwd, env):
+        job = Path(cwd).parent.parent
+        recorded.append(json.loads((job / "job.json").read_text())["deadline_seconds"])
+        return inner(argv, cwd, env)
+
+    probes.spawn = spawn
+    code, _, _ = run(tmp_path, "--suite", "basic", "--deadline", "42", probes=probes)
     assert code == 0
-    job = json.loads((only_job(runs) / "job.json").read_text())
-    assert job["deadline_seconds"] == 42.0
+    assert recorded and set(recorded) == {42.0}
 
 
-def test_a_fired_deadline_records_a_stopped_trial(tmp_path: Path) -> None:
+def test_a_fired_deadline_records_a_stopped_trial(tmp_path: Path, capsys) -> None:
     probes = Probes(spawn=FakeSpawn(outlives_at=1))
     code, _, runs = run(tmp_path, "--suite", "basic", probes=probes)
     assert code == 2
@@ -460,6 +469,8 @@ def test_a_fired_deadline_records_a_stopped_trial(tmp_path: Path) -> None:
     assert summary["status"] == "stopped"
     assert summary["stopped"] == 1
     assert summary["exit_status"] == 2
+    printed = capsys.readouterr().out
+    assert "sessions 1 ended, 0 failed, 1 stopped" in printed
 
 
 def test_a_stopped_job_starts_no_more_children(tmp_path: Path) -> None:
@@ -478,8 +489,11 @@ def test_a_stopped_trial_carries_no_verdict(tmp_path: Path) -> None:
     assert "score" not in record
 
 
-def test_a_non_positive_deadline_stops_before_a_job_directory(tmp_path: Path) -> None:
-    code, _, runs = run(tmp_path, "--suite", "basic", "--deadline", "0")
+@pytest.mark.parametrize("deadline", ["0", "-1", "nan", "inf", "-inf"])
+def test_a_deadline_outside_the_possible_stops_before_a_job_directory(
+    tmp_path: Path, deadline: str
+) -> None:
+    code, _, runs = run(tmp_path, "--suite", "basic", "--deadline", deadline)
     assert code == 2
     assert not runs.exists()
 
@@ -490,4 +504,20 @@ def test_the_deadline_does_not_disturb_a_clean_run(tmp_path: Path) -> None:
     summary = json.loads((only_job(runs) / "run.json").read_text())
     assert summary["status"] == "session-ended"
     assert summary["stopped"] == 0
->>>>>>> 692f9b9 (feat: bound each session with a deadline and record a stopped trial)
+
+
+def test_the_group_kill_signals_the_child_pid_directly(monkeypatch) -> None:
+    import signal
+
+    calls: list[tuple[int, int]] = []
+    monkeypatch.setattr(cli.os, "killpg", lambda pid, sig: calls.append((pid, sig)))
+    cli.kill_group(4321)
+    assert calls == [(4321, signal.SIGKILL)]
+
+
+def test_a_group_that_is_already_gone_is_not_an_error(monkeypatch) -> None:
+    def gone(pid: int, sig: int) -> None:
+        raise ProcessLookupError
+
+    monkeypatch.setattr(cli.os, "killpg", gone)
+    cli.kill_group(1)

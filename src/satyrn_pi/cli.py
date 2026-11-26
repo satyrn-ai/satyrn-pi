@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
+import os
 import sys
 import time
 from pathlib import Path
@@ -78,7 +80,7 @@ def main(argv: Sequence[str], *, probes, runs_root: Path, cwd: Path) -> int:
 
     if args.command != "eval":
         return _fail("no subcommand: expected eval")
-    if args.deadline <= 0:
+    if not math.isfinite(args.deadline) or args.deadline <= 0:
         return _fail(f"--deadline must be positive seconds, not {args.deadline:g}")
 
     started = probes.monotonic()
@@ -220,7 +222,7 @@ def main(argv: Sequence[str], *, probes, runs_root: Path, cwd: Path) -> int:
     print(f"suite    {suite.name} {suite.version}, {len(suite.tasks)} tasks")
     print(f"server   {args.base_url}")
     print(
-        f"sessions {len(records)} ended, {failures} failed, {stopped} stopped, "
+        f"sessions {len(records) - stopped} ended, {failures} failed, {stopped} stopped, "
         f"{requests} model requests"
     )
     print(f"records  {path}")
@@ -296,6 +298,22 @@ def server_health(base_url: str) -> bool:
         return False
 
 
+def kill_group(pid: int) -> None:
+    """Kill the group the child leads.
+
+    `start_new_session=True` makes the child a session and group leader, so its
+    pid *is* the group id. Looking the group up with `getpgid` would fail on the
+    very race this guards: a child that has just been reaped has no pgid, while
+    its descendants may still be running.
+    """
+    import signal
+
+    try:
+        os.killpg(pid, signal.SIGKILL)
+    except ProcessLookupError:
+        pass
+
+
 class RealProcess:
     """The one place a child is started. Its own session group is P5.4's to kill."""
 
@@ -324,13 +342,7 @@ class RealProcess:
 
     def kill_group(self) -> None:
         """Kill everything the child started, not only the child."""
-        import os
-        import signal
-
-        try:
-            os.killpg(os.getpgid(self._process.pid), signal.SIGKILL)
-        except ProcessLookupError:
-            pass
+        kill_group(self._process.pid)
 
     @property
     def exit_status(self) -> int:
