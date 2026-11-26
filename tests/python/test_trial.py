@@ -68,3 +68,15 @@ def test_a_verdict_left_over_from_a_final_record_is_refused(tmp_path: Path) -> N
     write_trial(tmp_path, {"task": "task-01", "status": "graded", "verdict": "pass", "score": 1.0})
     with pytest.raises(ValueError):
         write_trial(tmp_path, {"status": "prepared"})
+
+
+def test_a_stopped_trial_cannot_carry_a_verdict(tmp_path: Path) -> None:
+    with pytest.raises(ValueError):
+        write_trial(tmp_path, {"task": "task-01", "status": "stopped", "verdict": "pass"})
+
+
+def test_only_a_graded_trial_may_carry_a_result(tmp_path: Path) -> None:
+    write_trial(tmp_path, {"task": "task-01", "status": "graded", "verdict": "pass", "score": 1})
+    written = json.loads((tmp_path / "trial.json").read_text())
+    assert written["verdict"] == "pass"
+    assert written["score"] == 1

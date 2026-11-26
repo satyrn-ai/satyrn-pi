@@ -11,7 +11,7 @@ from typing import Callable, Iterator
 
 import pytest
 
-from satyrn_pi import cli
+from satyrn_pi import cli, session
 from satyrn_pi.records import aggregate_requests, read_trials
 
 FIXTURES = Path(__file__).parent / "fixtures" / "eval"
@@ -21,19 +21,34 @@ REPO = Path(__file__).resolve().parents[2]
 class Handle:
     """A spawned child as the CLI's real spawn would return one."""
 
-    def __init__(self, exit_status: int) -> None:
+    def __init__(self, exit_status: int, outlives: bool = False) -> None:
         self.exit_status = exit_status
+        self._outlives = outlives
+        self.killed = 0
 
     def communicate(self, timeout: float | None = None) -> tuple[str, str]:
+        if self._outlives:
+            self._outlives = False
+            raise session.TimedOut()
         return "", ""
+
+    def kill_group(self) -> None:
+        self.killed += 1
+        self.exit_status = -9
 
 
 class FakeSpawn:
     """Writes a session artifact per child, so requests have a real source."""
 
-    def __init__(self, requests: tuple[int, ...] = (1, 2, 3), exits: tuple[int, ...] = ()) -> None:
+    def __init__(
+        self,
+        requests: tuple[int, ...] = (1, 2, 3),
+        exits: tuple[int, ...] = (),
+        outlives_at: int | None = None,
+    ) -> None:
         self.requests: Iterator[int] = iter(requests)
         self.exits: Iterator[int] = iter(exits)
+        self.outlives_at = outlives_at
         self.calls: list[tuple[list[str], Path, dict]] = []
 
     def __call__(self, argv, cwd, env):
@@ -47,7 +62,8 @@ class FakeSpawn:
         for _ in range(next(self.requests, 0)):
             lines.append(json.dumps({"type": "message", "message": {"role": "assistant"}}))
         artifact.write_text("\n".join(lines) + "\n")
-        return Handle(next(self.exits, 0))
+        outlives = self.outlives_at == len(self.calls) - 1
+        return Handle(next(self.exits, 0), outlives=outlives)
 
 
 @dataclass
@@ -401,6 +417,7 @@ def test_a_missing_worker_entry_stops_before_a_job_directory(tmp_path: Path) -> 
     assert not runs.exists()
 
 
+<<<<<<< HEAD
 def test_a_silent_failure_still_names_the_trial_and_its_status(
     tmp_path: Path, capsys
 ) -> None:
@@ -422,3 +439,55 @@ def test_every_trial_shares_one_session_directory_with_its_own_id(
     assert len(directories) == 1
     assert directories.pop().endswith("/sessions")
     assert len(identifiers) == len(calls) == 3
+=======
+def test_the_deadline_is_recorded_before_anything_runs(tmp_path: Path) -> None:
+    code, _, runs = run(tmp_path, "--suite", "basic", "--deadline", "42")
+    assert code == 0
+    job = json.loads((only_job(runs) / "job.json").read_text())
+    assert job["deadline_seconds"] == 42.0
+
+
+def test_a_fired_deadline_records_a_stopped_trial(tmp_path: Path) -> None:
+    probes = Probes(spawn=FakeSpawn(outlives_at=1))
+    code, _, runs = run(tmp_path, "--suite", "basic", probes=probes)
+    assert code == 2
+    job = only_job(runs)
+    stopped = json.loads((job / "trial-02" / "trial.json").read_text())
+    assert stopped["status"] == "stopped"
+    assert stopped["stopped_by"] == "deadline"
+    assert stopped["exit_status"] == -9
+    summary = json.loads((job / "run.json").read_text())
+    assert summary["status"] == "stopped"
+    assert summary["stopped"] == 1
+    assert summary["exit_status"] == 2
+
+
+def test_a_stopped_job_starts_no_more_children(tmp_path: Path) -> None:
+    probes = Probes(spawn=FakeSpawn(outlives_at=1))
+    run(tmp_path, "--suite", "basic", probes=probes)
+    assert len(probes.spawn.calls) == 2
+    job = only_job(tmp_path / "runs")
+    assert sorted(path.name for path in job.glob("trial-*")) == ["trial-01", "trial-02"]
+
+
+def test_a_stopped_trial_carries_no_verdict(tmp_path: Path) -> None:
+    probes = Probes(spawn=FakeSpawn(outlives_at=0))
+    run(tmp_path, "--suite", "basic", probes=probes)
+    record = json.loads((only_job(tmp_path / "runs") / "trial-01" / "trial.json").read_text())
+    assert "verdict" not in record
+    assert "score" not in record
+
+
+def test_a_non_positive_deadline_stops_before_a_job_directory(tmp_path: Path) -> None:
+    code, _, runs = run(tmp_path, "--suite", "basic", "--deadline", "0")
+    assert code == 2
+    assert not runs.exists()
+
+
+def test_the_deadline_does_not_disturb_a_clean_run(tmp_path: Path) -> None:
+    code, _, runs = run(tmp_path, "--suite", "basic", "--deadline", "300")
+    assert code == 0
+    summary = json.loads((only_job(runs) / "run.json").read_text())
+    assert summary["status"] == "session-ended"
+    assert summary["stopped"] == 0
+>>>>>>> 692f9b9 (feat: bound each session with a deadline and record a stopped trial)

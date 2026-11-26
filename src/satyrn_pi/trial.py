@@ -13,6 +13,7 @@ from typing import Mapping
 STATUSES = ("prepared", "running", "session-ended", "graded", "stopped")
 FINAL = ("graded", "stopped")
 RESULT_FIELDS = ("verdict", "score")
+RESULT_STATUS = "graded"
 
 
 def write_trial(trial: Path, update: Mapping[str, object]) -> None:
@@ -27,7 +28,7 @@ def write_trial(trial: Path, update: Mapping[str, object]) -> None:
     status = merged.get("status")
     if status not in STATUSES:
         raise ValueError(f"unknown trial status: {status!r}")
-    if status not in FINAL:
+    if status != RESULT_STATUS:
         leaked = [field for field in RESULT_FIELDS if field in merged]
         if leaked:
             raise ValueError(
