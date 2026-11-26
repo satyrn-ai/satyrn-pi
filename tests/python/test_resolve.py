@@ -214,3 +214,24 @@ def test_a_zero_major_caret_follows_npm(tmp_path: Path) -> None:
     assert satisfies("0.9.0", "^0.1.0") is False
     assert satisfies("0.0.1", "^0.0.1") is True
     assert satisfies("0.0.2", "^0.0.1") is False
+
+
+def test_a_worker_whose_entry_is_missing_is_not_a_worker(tmp_path: Path) -> None:
+    (tmp_path / "package.json").write_text(
+        json.dumps(
+            {
+                "name": "@satyrn-pi/gone",
+                "version": "0.0.1",
+                "satyrn": {"worker": "./gone.ts"},
+            }
+        )
+    )
+    with pytest.raises(ResolutionError) as raised:
+        resolve_worker(tmp_path, lambda: None)
+    assert "gone.ts" in str(raised.value)
+
+
+def test_the_stub_suite_is_one_task_for_an_end_to_end_run() -> None:
+    suite = resolve_suite("stub", FIXTURES)
+    assert [task["id"] for task in suite.tasks] == ["task-stub"]
+    assert suite.tasks[0]["fixture"] == "fixtures/task-stub"
