@@ -109,7 +109,9 @@ def _worker_from(directory: Path, source: str) -> Worker:
     entry = satyrn.get("worker")
     if not isinstance(entry, str) or not entry.strip():
         raise ResolutionError(f"{path} declares no satyrn.worker entry")
-    if not (Path(directory) / entry).is_file():
+    root = Path(directory).resolve()
+    candidate = (root / entry).resolve()
+    if root not in candidate.parents or not candidate.is_file():
         raise ResolutionError(f"{path} names {entry}, which is not in the directory")
     return Worker(
         path=Path(directory),

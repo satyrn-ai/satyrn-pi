@@ -439,3 +439,26 @@ def test_a_missing_worker_entry_stops_before_a_job_directory(tmp_path: Path) -> 
     code, _, runs = run(tmp_path, "--suite", "basic", "--worker", str(worker))
     assert code == 2
     assert not runs.exists()
+
+
+def test_a_silent_failure_still_names_the_trial_and_its_status(
+    tmp_path: Path, capsys
+) -> None:
+    probes = Probes(spawn=FakeSpawn(exits=(0, 4, 0)))
+    run(tmp_path, "--suite", "basic", probes=probes)
+    printed = capsys.readouterr().err
+    assert "trial-02" in printed
+    assert "4" in printed
+
+
+def test_every_trial_shares_one_session_directory_with_its_own_id(
+    tmp_path: Path,
+) -> None:
+    probes = Probes()
+    run(tmp_path, "--suite", "basic", probes=probes)
+    calls = probes.spawn.calls
+    directories = {call[0][call[0].index("--session-dir") + 1] for call in calls}
+    identifiers = {call[0][call[0].index("--session-id") + 1] for call in calls}
+    assert len(directories) == 1
+    assert directories.pop().endswith("/sessions")
+    assert len(identifiers) == len(calls) == 3

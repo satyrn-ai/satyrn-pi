@@ -179,6 +179,7 @@ def main(argv: Sequence[str], *, probes, runs_root: Path, cwd: Path) -> int:
         )
         if outcome.exit_status != 0:
             failures += 1
+            print(f"{trial.name}: Pi exited with status {outcome.exit_status}", file=sys.stderr)
             if outcome.stderr.strip():
                 print(outcome.stderr.strip()[-400:], file=sys.stderr)
 
