@@ -119,14 +119,20 @@ class Handle:
         returncode: int = 0,
         writes: Path | None = None,
         stdout: str = "",
+        outlives_the_deadline: bool = False,
     ) -> None:
         self.exit_status = returncode
         self._writes = writes
         self._stdout = stdout
+        self._outlives = outlives_the_deadline
+        self.killed = 0
         self.calls: list[tuple] = []
 
     def communicate(self, timeout: float | None = None) -> tuple[str, str]:
         self.calls.append(("communicate", timeout))
+        if self._outlives:
+            self._outlives = False
+            raise session.TimedOut()
         if self._writes is not None:
             self._writes.parent.mkdir(parents=True, exist_ok=True)
             self._writes.write_text(
@@ -142,6 +148,10 @@ class Handle:
                 + "\n"
             )
         return self._stdout, ""
+
+    def kill_group(self) -> None:
+        self.killed += 1
+        self.exit_status = -9
 
 
 def run(tmp_path: Path, handle: Handle, **overrides):
@@ -165,6 +175,7 @@ def run(tmp_path: Path, handle: Handle, **overrides):
         base_env={"PATH": "/bin"},
         spawn=spawn,
         clock=lambda: ticks.pop(0),
+        deadline=300.0,
     )
     values.update(overrides)
     return session.run_session(**values), spawned
@@ -235,3 +246,28 @@ def test_a_valid_json_non_object_does_not_stop_the_count(tmp_path: Path, line: s
         line + "\n" + json.dumps({"type": "message", "message": {"role": "assistant"}}) + "\n"
     )
     assert session.count_requests(artifact) == 1
+
+
+def test_the_deadline_reaches_the_child(tmp_path: Path) -> None:
+    handle = Handle()
+    run(tmp_path, handle, deadline=12.5)
+    assert handle.calls == [("communicate", 12.5)]
+
+
+def test_a_fired_deadline_kills_the_group_and_reaps_the_child(tmp_path: Path) -> None:
+    handle = Handle(outlives_the_deadline=True)
+    outcome, _ = run(tmp_path, handle)
+    assert outcome.stopped is True
+    assert handle.killed == 1
+    assert outcome.exit_status == -9
+    assert handle.calls == [("communicate", 300.0), ("communicate", None)]
+
+
+def test_a_clean_run_is_not_stopped(tmp_path: Path) -> None:
+    outcome, _ = run(tmp_path, Handle())
+    assert outcome.stopped is False
+
+
+def test_a_stopped_span_is_measured_from_the_same_start(tmp_path: Path) -> None:
+    outcome, _ = run(tmp_path, Handle(outlives_the_deadline=True))
+    assert outcome.elapsed_seconds == 2.5

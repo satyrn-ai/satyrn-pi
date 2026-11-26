@@ -20,6 +20,10 @@ MAX_TOKENS = 16384
 SAMPLING = {"temperature": 1.0, "top_p": 0.95, "top_k": 20}
 
 
+class TimedOut(RuntimeError):
+    """The child outlived its deadline. The adapter raises this, not `subprocess`."""
+
+
 @dataclass(frozen=True)
 class Outcome:
     """What a finished child leaves: its status, its clock and its artifact."""
@@ -29,6 +33,7 @@ class Outcome:
     model_requests: int
     trajectory: Path | None
     stderr: str
+    stopped: bool = False
 
 
 def session_argv(
@@ -162,8 +167,14 @@ def run_session(
     base_env: Mapping[str, str],
     spawn: Callable[[Sequence[str], Path, Mapping[str, str]], object],
     clock: Callable[[], float],
+    deadline: float,
 ) -> Outcome:
-    """Spawn one child, wait for it, and turn its remains into an `Outcome`."""
+    """Spawn one child, wait for it within `deadline`, and record what remains.
+
+    A fired deadline kills the group the child started in, reaps it, and reports
+    `stopped`. The span is still measured from the same start, so the clock is not
+    restarted to make the kill look quick.
+    """
     argv = session_argv(
         binary=binary,
         prompt=prompt,
@@ -174,7 +185,13 @@ def run_session(
     )
     started = clock()
     handle = spawn(argv, Path(workspace), session_env(base_env, agent_dir=agent_dir))
-    _, stderr = handle.communicate()
+    stopped = False
+    try:
+        _, stderr = handle.communicate(timeout=deadline)
+    except TimedOut:
+        handle.kill_group()
+        _, stderr = handle.communicate()
+        stopped = True
     elapsed = round(clock() - started, 3)
     trajectory = collect_trajectory(session_dir, session_id, Path(trial))
     return Outcome(
@@ -183,4 +200,5 @@ def run_session(
         model_requests=count_requests(trajectory) if trajectory else 0,
         trajectory=trajectory,
         stderr=stderr or "",
+        stopped=stopped,
     )
