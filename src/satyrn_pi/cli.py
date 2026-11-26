@@ -140,19 +140,35 @@ def main(argv: Sequence[str], *, probes, runs_root: Path, cwd: Path) -> int:
     return OK
 
 
-def installed_worker() -> Path | None:
-    """The worker an installed npm package would supply. P8 makes this real."""
-    for candidate in sorted(Path("node_modules").glob("@*/*")):
-        manifest = candidate / "package.json"
-        if not manifest.is_file():
-            continue
-        try:
-            data = json.loads(manifest.read_text())
-        except json.JSONDecodeError:
-            continue
-        if isinstance(data.get("satyrn"), dict) and data["satyrn"].get("worker"):
-            return candidate
-    return None
+def installed_worker(cwd: Path) -> Path | None:
+    """The worker an installed npm package would supply. P8 makes this real.
+
+    The package's own name is unscoped, so it is checked first; scoped packages
+    are the other shape an install can take. Two candidates would need a guess,
+    so they stop the run instead of one being chosen by sort order.
+    """
+    root = Path(cwd) / "node_modules"
+    candidates = [root / "satyrn-pi", *sorted(root.glob("@*/*"))]
+    found = [
+        candidate for candidate in candidates if _declares_worker(candidate / "package.json")
+    ]
+    if len(found) > 1:
+        names = ", ".join(str(candidate) for candidate in found)
+        raise ResolutionError(f"two installed workers: {names}; pass --worker")
+    return found[0] if found else None
+
+
+def _declares_worker(manifest: Path) -> bool:
+    if not manifest.is_file():
+        return False
+    try:
+        data = json.loads(manifest.read_text())
+    except json.JSONDecodeError:
+        return False
+    if not isinstance(data, dict):
+        return False
+    satyrn = data.get("satyrn")
+    return isinstance(satyrn, dict) and bool(satyrn.get("worker"))
 
 
 def version_beside(binary: Path) -> str:
@@ -217,7 +233,7 @@ class RealProbes:
         import shutil
         from datetime import datetime, timezone
 
-        self.installed_worker = installed_worker
+        self.installed_worker = lambda: installed_worker(cwd)
         path_pi = shutil.which("pi")
         self.pi_candidates = [("project", project_pi(cwd))]
         if path_pi:

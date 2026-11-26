@@ -12,6 +12,7 @@ import pytest
 
 from satyrn_pi import cli
 from satyrn_pi.records import aggregate_requests, load_trials
+from satyrn_pi.resolve import ResolutionError
 
 FIXTURES = Path(__file__).parent / "fixtures" / "eval"
 REPO = Path(__file__).resolve().parents[2]
@@ -235,3 +236,28 @@ def test_the_pinned_alias_lets_the_run_through(tmp_path: Path) -> None:
     probes = Probes(server_models=lambda _: (cli.DEFAULT_MODEL,))
     code, _, _ = run(tmp_path, "--suite", "basic", probes=probes)
     assert code == 0
+
+
+def test_an_unscoped_installed_worker_is_found(tmp_path: Path) -> None:
+    worker = tmp_path / "node_modules" / "satyrn-pi"
+    worker.mkdir(parents=True)
+    (worker / "package.json").write_text(json.dumps({"satyrn": {"worker": "w.ts"}}))
+    assert cli.installed_worker(tmp_path) == worker
+
+
+def test_two_installed_workers_are_refused(tmp_path: Path) -> None:
+    for name in ("satyrn-pi", "@satyrn/worker"):
+        directory = tmp_path / "node_modules" / name
+        directory.mkdir(parents=True)
+        (directory / "package.json").write_text(json.dumps({"satyrn": {"worker": "w.ts"}}))
+    with pytest.raises(ResolutionError, match="two installed workers"):
+        cli.installed_worker(tmp_path)
+
+
+def test_an_ambiguous_install_stops_before_a_job_directory(tmp_path: Path) -> None:
+    def ambiguous():
+        raise ResolutionError("two installed workers: a, b")
+
+    probes = Probes(installed_worker=ambiguous)
+    code, _, runs = run(tmp_path, "--suite", "basic", probes=probes)
+    assert (code, runs.exists()) == (cli.STOPPED, False)
