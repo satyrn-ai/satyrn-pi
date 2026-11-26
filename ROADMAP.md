@@ -4,9 +4,9 @@ Scope: [BRIEF](BRIEF.md). Process: [Superpowers/SDD and roadmap rules](docs/rule
 
 ## Now
 
-In flight: [P4.3](#phase-4--getting-started-setup-llamacpp), published into the phase-4 branch as PR #21 and waiting for its own request to `main`; and this branch, which splits [phase 5](#phase-5--eval-cli) into four cycles, with [P5.1](#phase-5--eval-cli) and [P5.2](#phase-5--eval-cli) stacked behind it. P4.2's walk merged as #20; phase 4's split as #18 and its host card as #19.
+In flight: [P4.3](#phase-4--getting-started-setup-llamacpp), merged into the phase-4 branch as #21 and waiting for its request to `main` (#27); and [phase 5](#phase-5--eval-cli), split into four cycles here (#23), with P5.1 (#25), P5.2 (#26), P5.3 (#28) and P5.4 (#29) stacked behind it. P4.2's walk merged as #20; phase 4's split as #18 and its host card as #19.
 Parked: preset choices and rented-host qualification await their [research owners](BRIEF.md#decisions-the-research-documents-own).
-Next: [P5.3](#phase-5--eval-cli), the Pi child, once P5.2 is reviewed.
+Next: the phase-5 stack's review, then [phase 6](#phase-6--suites), whose suites and grading depend on P5.4.
 
 Rows are initial proposals. Brainstorm each phase during the port and split or
 add cycles before implementation; one row does not limit a phase to one cycle.
