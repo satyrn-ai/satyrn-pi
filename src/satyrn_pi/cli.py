@@ -95,6 +95,11 @@ def main(argv: Sequence[str], *, probes, runs_root: Path, cwd: Path) -> int:
         )
 
     trials = load_trials(Path(probes.suite_root) / "trials")
+    print(f"worker   {worker.version} {worker.path} ({worker.source})")
+    print(f"pi       {pi.version} ({'verified' if pi.verified else 'unverified'}, {pi.source})")
+    print(f"suite    {suite.name} {suite.version}, {len(suite.tasks)} tasks")
+    print(f"server   {args.base_url}")
+
     identifier = job_id(probes.now())
     path = job_path(Path(runs_root), suite, identifier)
 
@@ -132,10 +137,6 @@ def main(argv: Sequence[str], *, probes, runs_root: Path, cwd: Path) -> int:
         },
     )
 
-    print(f"worker   {worker.version} {worker.path} ({worker.source})")
-    print(f"pi       {pi.version} ({'verified' if pi.verified else 'unverified'}, {pi.source})")
-    print(f"suite    {suite.name} {suite.version}, {len(suite.tasks)} tasks")
-    print(f"server   {args.base_url}")
     print(f"records  {path}")
     return OK
 

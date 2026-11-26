@@ -261,3 +261,17 @@ def test_an_ambiguous_install_stops_before_a_job_directory(tmp_path: Path) -> No
     probes = Probes(installed_worker=ambiguous)
     code, _, runs = run(tmp_path, "--suite", "basic", probes=probes)
     assert (code, runs.exists()) == (cli.STOPPED, False)
+
+
+def test_the_resolution_is_printed_before_the_job_directory(tmp_path: Path, capsys) -> None:
+    seen: list[str] = []
+    probes = Probes()
+    now = probes.now
+
+    def capture() -> datetime:
+        seen.append(capsys.readouterr().out)
+        return now()
+
+    probes.now = capture
+    run(tmp_path, "--suite", "basic", probes=probes)
+    assert all(word in seen[0] for word in ("worker", "pi", "suite", "server"))
