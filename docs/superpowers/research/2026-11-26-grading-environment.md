@@ -115,6 +115,9 @@ without changing the existing meaning:
 
 The copy is 95 files and 867,403 bytes; with the tree's 128 files and 922,653 bytes
 that is 223 files and 1,790,056 bytes before the rewritten graders and their tests.
+725,873 of those bytes are three `uv.lock` files, and Easy's and Medium's are the same
+blob: a byte-verbatim copy keeps both copies, because deduplicating them would break the
+claim the hash test makes.
 The budget rises from 200 files and 1 MB to 320 files and 2.5 MB. The check exists to
 keep run output, traces and workspaces out of the tree; pinned inputs and re-earned
 graders are neither.
