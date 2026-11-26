@@ -2,9 +2,9 @@
 
 A small local model as a bounded coding worker inside Pi.
 
-**Port status:** this repository currently ships package skeletons only. The
-worker, remedies, eval CLI, suites and grading are not implemented yet; see
-[ROADMAP.md](ROADMAP.md).
+**Port status:** the eval CLI resolves a run, prepares each trial's workspace, and
+starts one bounded Pi session per task. The worker, remedies, suites, grading and
+verdicts are not implemented yet; see [ROADMAP.md](ROADMAP.md).
 
 **Site:** <https://satyrn-ai.github.io/satyrn-pi/> carries the home page and the
 glossary. It is built from `docs/index.md` and `docs/glossary.md` by the workflow
