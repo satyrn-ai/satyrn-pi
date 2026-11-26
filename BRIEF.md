@@ -157,7 +157,11 @@ plan. The [source closing checklist](docs/sdd.md#closing-a-feature-cycle) and
 its mapped destinations govern the details. A negative finding can close a
 cycle without shipping a remedy or claiming a win.
 
-The twelve phases organise this port; they do not end SDD. Subsequent features,
+The twelve phases organise this port; they do not end SDD. A thirteenth row,
+**P4.5 — Integration**, sits between phases 4 and 5 as a bounded interval rather
+than a renumbering (2026-11-26): it holds the eval CLI's stack until its review
+findings close and re-cuts it around them. It ends, and phases 5–12 keep their
+numbers and their records. Subsequent features,
 maintenance, bugs and new remedy candidates use the same skills and records.
 Add cycles to the relevant phase, or a new phase for a new body of work; keep
 closed decisions and evidence retrievable. Reopening a measured setting still
@@ -294,7 +298,8 @@ contents.
 [ROADMAP.md](ROADMAP.md) carries twelve phases, in this order: repository setup,
 including P1.2's domain and vocabulary agreement; spec-driven development setup
 that installs the preserved process and rules; the Zensical documentation site;
-Getting Started's setup section for `llama.cpp`; the eval CLI; the eval suites;
+Getting Started's setup section for `llama.cpp`; P4.5's integration interval;
+the eval CLI; the eval suites;
 Vanilla; Base; the rest of Getting Started; then remedies as three phases —
 Easy, Medium, Hard — one remedy per feature cycle.
 

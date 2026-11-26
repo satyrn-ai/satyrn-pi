@@ -4,9 +4,10 @@ Scope: [BRIEF](BRIEF.md). Process: [Superpowers/SDD and roadmap rules](docs/rule
 
 ## Now
 
-In flight: [P4.2](#phase-4--getting-started-setup-llamacpp), the recorded walk, in [PR #20](https://github.com/satyrn-ai/satyrn-pi/pull/20); [P4.3](#phase-4--getting-started-setup-llamacpp) is stacked on it. The split merged as #18 and the host card as #19.
+In flight: [P4.5](#phase-45--integration), the integration interval, opened by this pull request. Phase 4 is closed: P4.2 merged as #20, and P4.3 landed on `main` through #27 after missing it by thirteen seconds in #21.
+Held: [P5.1](#phase-5--eval-cli)–[P5.4](#phase-5--eval-cli) wait for I.3's re-cut, because the review found six issues in the stack and one of them moved P5.1's implementation into #26.
 Parked: preset choices and rented-host qualification await their [research owners](BRIEF.md#decisions-the-research-documents-own).
-Next: [P4.3](#phase-4--getting-started-setup-llamacpp), publishing Getting Started, once its branch is reviewed.
+Next: [I.2](#phase-45--integration), Ben's two page findings, and [I.3](#phase-45--integration), the re-cut.
 
 Rows are initial proposals. Brainstorm each phase during the port and split or
 add cycles before implementation; one row does not limit a phase to one cycle.
@@ -52,8 +53,19 @@ Each row below carries its own plan when it opens.
 | Cycle | Ships | Excludes | Status |
 | --- | --- | --- | --- |
 | **P4.1** | The reference host card: llama.cpp b12066's source commit and the official `llama-b12066-bin-macos-arm64.tar.gz` asset digest, the Q4_K_M GGUF's Hugging Face revision, size and sha256, the preserved settings, and the whole serve command, each quoted with the metadata it came from. Darwin arm64 is the documented reference platform; every other platform is published as unverified. | Fetching an artifact; a running server; any site change; a second quant or build. | closed 2026-11-24 — merged as PR #19. The card pins b12066 by commit and asset digest and Q4_K_M by revision and sha256; Andre's review corrected the premise that a container digest was ever the llama batch's. [Card](docs/superpowers/research/2026-11-21-reference-host-card.md). |
-| **P4.2** | b12066 installed beside Homebrew's 12110 from that asset, the weights fetched and verified against the card, a served model at `127.0.0.1:8001`, a demonstrated answer, the walk through the page's steps from a directory with neither build nor weights, and the startup allocation with the observed footprint. | Publishing; prose; an eval-managed server lifecycle; a machine nobody here has touched. | proposed — stacked on P4.1. |
-| **P4.3** | Getting Started at `docs/getting-started.md`: numbered steps rendered from P4.2's walk, the digests and build tag, the two macOS failures named, a nav section, the site's third published page with its published-set test updated deliberately, and a check that the page's digests still match the card. | Phase 9's walkthrough sections; setup for unverified platforms; a fourth page. | proposed — stacked on P4.2; Ben reviews the prose. |
+| **P4.2** | b12066 installed beside Homebrew's 12110 from that asset, the weights fetched and verified against the card, a served model at `127.0.0.1:8001`, a demonstrated answer, the walk through the page's steps from a directory with neither build nor weights, and the startup allocation with the observed footprint. | Publishing; prose; an eval-managed server lifecycle; a machine nobody here has touched. | closed 2026-11-24 — merged as #20. The walk is recorded, the pinned binary and weights served, and the answer came from that server ([plan](docs/superpowers/plans/2026-11-21-p4.2-reproduce-reference.md)). |
+| **P4.3** | Getting Started at `docs/getting-started.md`: numbered steps rendered from P4.2's walk, the digests and build tag, the two macOS failures named, a nav section, the site's third published page with its published-set test updated deliberately, and a check that the page's digests still match the card. | Phase 9's walkthrough sections; setup for unverified platforms; a fourth page. | closed 2026-11-26 — merged into the stack as #21 and landed on `main` by #27 (`6abddbd`). The page answers 200 with its five steps; Ben's page findings are I.2's. |
+
+## Phase 4.5 — Integration
+
+The interval that holds the phase-5 stack until its review findings close. Its calls, its cycle boundaries and its merge order are settled in the [P4.5 spec](docs/superpowers/specs/2026-11-26-integration-phase-design.md); it ends rather than becoming a standing chore.
+
+| Cycle | Ships | Excludes | Status |
+| --- | --- | --- | --- |
+| **I.1** | Opens the phase: this section, the dated line in `BRIEF.md`, `## Now` naming the hold, and the P4.3 landing recorded, including the realignment of the local `p4.2/reproduce-reference` branch. | Product change; a plan — a record cycle needs none. | proposed — this pull request. |
+| **I.2** | Ben's two page findings: `mkdir -p ~/models` before the weights download, and a memory line citing both machines — the reference rig's 7.95 GiB RSS against his 16 GB laptop at 8.5 GB and swapping — advising 16 GB, with a copy-paste walk as proof. | New platforms; new pins; a measurement claimed as a rate; the 404, closed by I.1. | proposed — independent of the stack; Ben's prose. |
+| **I.3** | The stack re-cut: #23 rebased onto `main` and merged, then P5.1–P5.4 cut fresh from their surviving commits, each carrying only its own cycle, with findings 2–3 fixed inside P5.3 and 4–5 inside P5.1. The four old requests close with pointers to their replacements. | Scope beyond each cycle's own commits; merging in this cycle. | proposed — the stack's first move. |
+| **I.4** | The landings as merge commits, then one records PR closing P5.1–P5.4, closing phase 4's records, moving `## Now` past phase 5, and adding the retarget-and-align line to this file's preamble. | Renumbering; preserved-record edits; a second records PR. | proposed. |
 
 ## Phase 5 — Eval CLI
 
