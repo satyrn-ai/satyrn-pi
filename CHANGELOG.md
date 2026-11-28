@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- Ship the Easy, Medium and Hard eval suites inside the Python package: the
+  fixtures, prompts and expected checks copied byte-verbatim from
+  `mellum-worker` `0e4a9b68`, with a manifest that hashes every copied file and
+  names the re-earned graders as references.
 - Seed the repository from the `mellum-worker` staging tree at `44bdbd61`,
   excluding only the staging-only `README.md`.
 - Add the npm and Python package skeletons, `satyrn-pi` in both, with locked
