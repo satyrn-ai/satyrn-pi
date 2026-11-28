@@ -3,7 +3,11 @@
 import { readdir, stat } from "node:fs/promises";
 import path from "node:path";
 
-export const BUDGET = Object.freeze({ maxFiles: 200, maxBytes: 1_000_000 });
+// Raised in P6.1 from 200 files and 1 MB to hold the pinned suite data: 95 copied
+// files and 867,403 bytes, 725,873 of them three uv.lock files, two of which are the
+// same blob. The check exists to keep run output, traces and workspaces out of the
+// tree; pinned inputs and re-earned graders are none of those.
+export const BUDGET = Object.freeze({ maxFiles: 320, maxBytes: 2_500_000 });
 
 // Kept in step with .gitignore by tests/repo-weight.test.mjs.
 export const IGNORED_DIRECTORIES = new Set([
@@ -18,6 +22,9 @@ export const IGNORED_DIRECTORIES = new Set([
   ".idea",
   ".ruff_cache",
   ".mypy_cache",
+  // Contributor scratch the other scanners already skip: the superpowers workspace
+  // is git-ignored and must not make the local count differ from CI's.
+  ".superpowers",
 ]);
 
 const isIgnored = (name) =>

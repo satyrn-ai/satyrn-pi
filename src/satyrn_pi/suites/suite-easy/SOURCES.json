@@ -1,0 +1,36 @@
+{
+  "authored": [
+    "suite.json"
+  ],
+  "commit": "0e4a9b6859cbe447adbca537c5738f24a862d214",
+  "copied": {
+    "base/.gitignore": "4409b253ac33acb862192f9cad8583ed3fe0bac938082a6cfa784d7cf0d185ef",
+    "base/AGENTS.md": "e1b95ace215013b76cd7043d64df5bf7955453b11516c454b9881676891dd2ca",
+    "base/pyproject.toml": "98192982422deb78dcf6cdff25f08c1a06d57e6835d4991c8307e594d7924191",
+    "base/specs/mission.md": "df464c1f7801e38994ebc30a9e01cbc839fe7ff71c422b7c7b83a6c113a9e6fc",
+    "base/specs/roadmap.md": "670e36dcb2778e426092d9030c074f01a5015f2e8932868d9764b5fcae24a638",
+    "base/specs/tech-stack.md": "321ee9a48f521ad876e18599f883a539ba538c7f1e567e77871427454f0372cd",
+    "base/uv.lock": "274911a1323518019f7fb18c37d79651bc7fe8eb075fe492ebdd5169eac3b884",
+    "expected.json": "f921a54346d8cfbe26c1058050e0d0cc0a922863c0d608b644b7031c4b01a2b8",
+    "fixtures/known-broken/app.py": "ee8328d4341d6f3c73bf66b85c99523312efd6e43889c1c130bf2513bc5c1867",
+    "fixtures/known-broken/models.py": "9c86bda59487d50fab5bfda7c4775e5a1013fe5c8211bed9875474221e7c4cc1",
+    "fixtures/known-broken/templates/base.html": "1a0fe07d17aae0c064941b99aa2a647f2783e792b1c242c7ba8b46fe051c6133",
+    "fixtures/known-broken/templates/complaints.html": "2987a73da2250b5a1f1df1ef0c04693da7e46a5d35d567bcd070b4ed50c43339",
+    "fixtures/known-broken/templates/home.html": "d00fb1e35930ce8fd210b236c21ed253e43d76540c79edfb3f7370f10aaa92d9",
+    "fixtures/known-good/app.py": "ee8328d4341d6f3c73bf66b85c99523312efd6e43889c1c130bf2513bc5c1867",
+    "fixtures/known-good/models.py": "9c86bda59487d50fab5bfda7c4775e5a1013fe5c8211bed9875474221e7c4cc1",
+    "fixtures/known-good/templates/base.html": "eb0f5000246cce70fed561c45d09fda67ccd3b646e7a268ef72576421ca75c4b",
+    "fixtures/known-good/templates/complaints.html": "2987a73da2250b5a1f1df1ef0c04693da7e46a5d35d567bcd070b4ed50c43339",
+    "fixtures/known-good/templates/home.html": "d00fb1e35930ce8fd210b236c21ed253e43d76540c79edfb3f7370f10aaa92d9",
+    "layout.json": "ba41de4543c51a0eda0f4644bfe1d3fafb5b356cff02761d56cd71802c13acdc",
+    "prompts/01.md": "26e4bfb122df8f29f9c24b14a4ee00219ce4340199dcf6e9730b5784075af034"
+  },
+  "hash": "sha256",
+  "reference": {
+    "grader/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "grader/_contract.py": "082b3b980dff1d94e7ef75362aed0ab1e83d3189fb18244eeafc21099c53bbd6",
+    "grader/canary": "18573a419ea3f9d0ac9428c349a82be03e82abbb6df8c981bea859d6ebc7fb66",
+    "grader/test_phase1_home.py": "9050acf16e0cc4640fbd0384949153d7194454f4a8acaa5e5662cb3bca6fae48"
+  },
+  "repository": "andrevanzuydam/mellum-worker"
+}
