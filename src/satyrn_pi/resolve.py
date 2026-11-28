@@ -12,6 +12,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Iterable, Mapping, Sequence
 
+from .suite_data import (
+    SOURCE_DIR,
+    SOURCES_NAME,
+    SuiteData,
+    SuiteDataError,
+    load_suite_data,
+)
+
 TASK_FIELDS = ("id", "instructions", "fixture", "verification")
 
 
@@ -40,6 +48,7 @@ class Suite:
     name: str
     version: str
     tasks: tuple[Mapping[str, str], ...]
+    data: SuiteData | None = None
 
 
 def parse_version(text: str) -> tuple[int, int, int]:
@@ -185,4 +194,11 @@ def resolve_suite(name: str, root: Path) -> Suite:
             if not isinstance(task.get(field), str) or not task[field].strip():
                 raise ResolutionError(f"{path} task {index} needs a {field} string")
         validated.append({field: task[field] for field in TASK_FIELDS})
-    return Suite(name=declared, version=version, tasks=tuple(validated))
+    suite_dir = path.parent
+    data = None
+    if (suite_dir / SOURCE_DIR).exists() or (suite_dir / SOURCES_NAME).exists():
+        try:
+            data = load_suite_data(suite_dir)
+        except SuiteDataError as error:
+            raise ResolutionError(str(error)) from error
+    return Suite(name=declared, version=version, tasks=tuple(validated), data=data)

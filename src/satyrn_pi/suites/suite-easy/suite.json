@@ -1,0 +1,13 @@
+{
+  "name": "easy",
+  "version": "1",
+  "promptMode": "joined",
+  "tasks": [
+    {
+      "id": "easy",
+      "instructions": "Implement Phase 1 \u2014 Home Page.",
+      "fixture": "source",
+      "verification": "The preserved checks in `source/expected.json`."
+    }
+  ]
+}
