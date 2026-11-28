@@ -22,8 +22,8 @@ export const IGNORED_DIRECTORIES = new Set([
   ".idea",
   ".ruff_cache",
   ".mypy_cache",
-  // Contributor scratch the other scanners already skip: the superpowers workspace
-  // is git-ignored and must not make the local count differ from CI's.
+  // Contributor scratch the other scanners already skip. The superpowers workspace
+  // git-ignores itself, and counting it would make a local run disagree with CI.
   ".superpowers",
 ]);
 
